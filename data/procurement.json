@@ -1,0 +1,74 @@
+[
+  {
+    "id": "mto8jfp3-4z6ej3",
+    "category": "已落地",
+    "name": "城市网格化巡查服务",
+    "unit": "城市治理事业部",
+    "service": "全市建成区网格化航拍巡查，覆盖违建、市容、环卫等问题采集",
+    "region": "全市 21 个街道",
+    "freq": "每周两次",
+    "budget": 320,
+    "follow": "",
+    "remark": "已签订年度服务合同"
+  },
+  {
+    "id": "mto8jfp3-xx4pb4",
+    "category": "已落地",
+    "name": "水域生态监测服务",
+    "unit": "生态环境事业部",
+    "service": "重点河涌水质航拍监测、排污口排查与蓝藻识别",
+    "region": "中心城区及重点流域",
+    "freq": "每月一次",
+    "budget": 280,
+    "follow": "",
+    "remark": "含月度数据报告"
+  },
+  {
+    "id": "mto8jfp3-b6gg6m",
+    "category": "潜在合作",
+    "name": "应急消防空中侦察支持",
+    "unit": "应急管理事业部",
+    "service": "火情侦察、灾害现场航拍建模、应急演练空中保障",
+    "region": "粤东片区",
+    "freq": "季度巡检",
+    "budget": null,
+    "follow": "方案编制中",
+    "remark": "待应急局立项评审"
+  },
+  {
+    "id": "mto8jfp3-t89byf",
+    "category": "潜在合作",
+    "name": "高标准农田航拍测绘",
+    "unit": "农业农村事业部",
+    "service": "农田地块航拍建模、作物长势监测与产量预估",
+    "region": "2 个试点县区",
+    "freq": "每月一次",
+    "budget": 150,
+    "follow": "初步接触",
+    "remark": "已完成现场踏勘"
+  },
+  {
+    "id": "mto8jfp3-wcp53c",
+    "category": "未对接",
+    "name": "森林防火巡查需求",
+    "unit": "市林业局",
+    "service": "重点林区防火巡飞、烟点识别与热成像监测",
+    "region": "北部山区林场",
+    "freq": "每周一次",
+    "budget": null,
+    "follow": "待决策",
+    "remark": "需先对接林政科明确巡飞范围"
+  },
+  {
+    "id": "mto8jfp3-ne49u4",
+    "category": "未对接",
+    "name": "城市违建智能识别试点",
+    "unit": "市城市综合执法局",
+    "service": "违章建筑航拍识别与变化对比分析",
+    "region": "主城区 3 个街道",
+    "freq": "每月一次",
+    "budget": null,
+    "follow": "初步接触",
+    "remark": "拟结合现有网格巡查数据开展试点"
+  }
+]

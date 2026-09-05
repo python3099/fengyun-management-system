@@ -1,0 +1,14 @@
+# 操作系统垃圾文件
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# 日志与临时文件
+*.log
+*.tmp
+
+# 依赖目录（本项目零依赖，预防性添加）
+node_modules/
+
+# 如不希望把运行数据提交到 Git，取消下面注释：
+# data/*.json

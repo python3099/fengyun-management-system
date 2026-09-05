@@ -1,0 +1,409 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>广东丰云智能科技有限公司管理系统</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🚁</text></svg>">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<noscript>本系统需要启用 JavaScript 才能使用，请在浏览器设置中允许运行脚本。</noscript>
+
+<!-- ===================== 顶部导航栏 ===================== -->
+<header class="topbar">
+  <div class="topbar-left">
+    <div class="logo" title="广东丰云智能科技有限公司">丰云</div>
+    <span class="sys-title">广东丰云智能科技有限公司管理系统</span>
+  </div>
+  <div class="topbar-right">
+    <span id="datetime">--</span>
+    <button class="login-btn" id="data-btn" title="数据管理">💾 数据</button>
+    <button class="login-btn" id="login-btn" title="当前为免登录模式">👤 登录</button>
+  </div>
+</header>
+
+<!-- ===================== 侧边菜单栏 ===================== -->
+<aside class="sidebar">
+  <nav class="menu">
+    <button class="menu-item active" data-page="todo"><span class="mi-icon">📋</span><span class="mi-text">日常待办</span></button>
+    <button class="menu-item" data-page="ops"><span class="mi-icon">📊</span><span class="mi-text">运营情况</span></button>
+    <button class="menu-item" data-page="blocker"><span class="mi-icon">🚧</span><span class="mi-text">进度卡点</span></button>
+    <button class="menu-item" data-page="proc"><span class="mi-icon">📈</span><span class="mi-text">来年统采进展</span></button>
+  </nav>
+  <div class="sidebar-foot">广东丰云智能科技有限公司<br>内部管理系统 · <span id="app-version"></span></div>
+</aside>
+
+<!-- ===================== 主内容区 ===================== -->
+<main class="main">
+
+  <!-- ========== 模块一：日常待办 ========== -->
+  <section class="page active" id="page-todo">
+    <div class="page-head">
+      <div>
+        <h2>日常待办</h2>
+        <p class="page-sub">以日历形式管理每日工作安排，支持待办的添加、编辑与删除</p>
+      </div>
+    </div>
+
+    <!-- 日历视图 -->
+    <div class="card calendar-card">
+      <div class="cal-toolbar">
+        <div class="cal-title" id="cal-title">--</div>
+        <div class="cal-nav">
+          <button class="btn btn-ghost btn-sm" id="cal-prev">‹ 上一月</button>
+          <button class="btn btn-ghost btn-sm" id="cal-today">今天</button>
+          <button class="btn btn-ghost btn-sm" id="cal-next">下一月 ›</button>
+        </div>
+      </div>
+      <div class="cal-week-header">
+        <span>一</span><span>二</span><span>三</span><span>四</span><span>五</span><span>六</span><span>日</span>
+      </div>
+      <div class="cal-grid" id="cal-grid"></div>
+    </div>
+
+    <!-- 选中日期的待办管理面板 -->
+    <div class="card todo-panel">
+      <div class="todo-panel-head">
+        <h3 id="todo-date-title">--</h3>
+        <span class="count-badge" id="todo-count">0 项</span>
+      </div>
+      <form class="todo-form" id="todo-form" autocomplete="off">
+        <input type="text" id="todo-person" placeholder="负责人（必填）">
+        <input type="text" id="todo-content" placeholder="工作内容（必填）">
+        <input type="text" id="todo-remark" placeholder="备注（选填）">
+        <button type="submit" class="btn btn-primary">＋ 添加待办</button>
+      </form>
+      <div id="todo-list"></div>
+    </div>
+  </section>
+
+  <!-- ========== 模块二：运营情况 ========== -->
+  <section class="page" id="page-ops">
+    <div class="page-head">
+      <div>
+        <h2>运营情况</h2>
+        <p class="page-sub">公司整体运营数据概览与各业务部门经营情况看板</p>
+      </div>
+      <button class="btn btn-primary" id="btn-add-dept">＋ 添加部门数据</button>
+    </div>
+
+    <!-- 公司总体概览：四个核心指标 -->
+    <div class="stat-grid">
+      <div class="stat-card">
+        <div class="stat-icon icon-blue">💼</div>
+        <div><div class="stat-label">合同总额（万元）</div><div class="stat-value" id="stat-contract">0</div></div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon icon-green">🚁</div>
+        <div><div class="stat-label">2026年总巡飞次数</div><div class="stat-value" id="stat-patrol">0</div></div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon icon-orange">🔍</div>
+        <div><div class="stat-label">总发现问题数（件）</div><div class="stat-value" id="stat-problem">0</div></div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon icon-purple">📁</div>
+        <div><div class="stat-label">运营项目总数（个）</div><div class="stat-value" id="stat-project">0</div></div>
+      </div>
+    </div>
+
+    <!-- 部门数据看板 -->
+    <div class="dept-grid" id="dept-grid"></div>
+  </section>
+
+  <!-- ========== 模块三：进度卡点 ========== -->
+  <section class="page" id="page-blocker">
+    <div class="page-head">
+      <div>
+        <h2>进度卡点</h2>
+        <p class="page-sub">跟踪各部门工作中的卡点问题与待推进事项</p>
+      </div>
+      <button class="btn btn-primary" id="btn-add-blocker">＋ 添加卡点</button>
+    </div>
+
+    <div class="card table-card">
+      <div class="table-wrap">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>序号</th>
+              <th>问题/事项名称</th>
+              <th>所属部门</th>
+              <th>进展情况</th>
+              <th>负责人</th>
+              <th>需协助事项</th>
+              <th>状态</th>
+              <th>更新时间</th>
+              <th>操作</th>
+            </tr>
+          </thead>
+          <tbody id="blocker-tbody"></tbody>
+        </table>
+      </div>
+      <div class="empty-state" id="blocker-empty" style="display:none">暂无卡点记录，点击右上角「添加卡点」开始记录</div>
+    </div>
+  </section>
+
+  <!-- ========== 模块四：来年统采进展 ========== -->
+  <section class="page" id="page-proc">
+    <div class="page-head">
+      <div>
+        <h2>来年统采进展</h2>
+        <p class="page-sub">2027 年度统一采购需求分类跟进清单，未对接清单为重点关注事项</p>
+      </div>
+      <button class="btn btn-primary" id="btn-add-proc">＋ 添加需求</button>
+    </div>
+
+    <!-- 三级分类标签切换 -->
+    <div class="proc-tabs">
+      <button class="proc-tab active" data-tab="已落地">已落地部门需求清单 <span class="tab-count">0</span></button>
+      <button class="proc-tab" data-tab="潜在合作">潜在合作单位需求清单 <span class="tab-count">0</span></button>
+      <button class="proc-tab tab-danger" data-tab="未对接">未对接部门需求清单 <span class="tab-count">0</span></button>
+    </div>
+
+    <div class="proc-grid" id="proc-grid"></div>
+  </section>
+</main>
+
+<!-- ===================== 弹窗：数据管理 ===================== -->
+<div class="modal-overlay" id="modal-data">
+  <div class="modal" style="max-width:540px">
+    <div class="modal-head">
+      <h3>数据管理</h3>
+      <button class="modal-close" data-close title="关闭">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="data-mode-card">
+        <div class="data-mode-line">当前存储模式 <span class="tag tag-gray" id="data-mode-badge">检测中…</span></div>
+        <p class="data-mode-desc" id="data-mode-desc">--</p>
+      </div>
+      <div class="data-actions">
+        <button class="btn btn-primary" id="btn-bind-dir">📁 绑定数据目录</button>
+        <button class="btn btn-reconnect" id="btn-reconnect-dir" style="display:none">🔗 重新连接数据目录</button>
+        <button class="btn btn-danger-ghost" id="btn-unbind-dir" style="display:none">解除绑定</button>
+      </div>
+      <div class="data-actions">
+        <button class="btn btn-ghost" id="btn-export">⬇️ 导出数据备份</button>
+        <button class="btn btn-ghost" id="btn-import">⬆️ 导入数据备份</button>
+        <input type="file" id="import-file" accept="application/json,.json" hidden>
+      </div>
+      <p class="data-note">
+        · 服务器共享模式：数据实时写入服务器 data/ 目录，全团队访问同一份数据（运行 node server.js 后自动启用）<br>
+        · 目录绑定模式：把数据保存到你选择的本地文件夹（如项目 data/ 目录），可随项目一起提交到 Git<br>
+        · 导出/导入：生成或恢复 JSON 备份文件，用于跨浏览器、跨电脑迁移数据
+      </p>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-ghost" data-close>关闭</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===================== 弹窗：部门数据表单 ===================== -->
+<div class="modal-overlay" id="modal-dept">
+  <div class="modal">
+    <div class="modal-head">
+      <h3 id="modal-dept-title">添加部门数据</h3>
+      <button class="modal-close" data-close title="关闭">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-item">
+        <label>部门名称<i>*</i></label>
+        <input type="text" id="f-dept-name" list="dept-name-list" placeholder="请输入或选择部门名称" autocomplete="off">
+        <datalist id="dept-name-list"></datalist>
+      </div>
+      <div class="form-item">
+        <label>服务内容</label>
+        <input type="text" id="f-dept-service" placeholder="简述该部门的核心服务，如：城市网格化巡查">
+      </div>
+      <div class="form-row-3">
+        <div class="form-item">
+          <label>合同额（万元）</label>
+          <input type="number" id="f-dept-contract" min="0" step="0.1" placeholder="0">
+        </div>
+        <div class="form-item">
+          <label>2026年巡飞次数</label>
+          <input type="number" id="f-dept-patrol" min="0" step="1" placeholder="0">
+        </div>
+        <div class="form-item">
+          <label>发现问题数（件）</label>
+          <input type="number" id="f-dept-problem" min="0" step="1" placeholder="0">
+        </div>
+      </div>
+      <div class="form-item">
+        <label>问题分类明细（选填）</label>
+        <div id="f-dept-cats"></div>
+        <button type="button" class="btn btn-ghost btn-sm" id="f-dept-addcat">＋ 添加分类</button>
+      </div>
+      <div class="form-item">
+        <label>运营项目（多个用逗号分隔）</label>
+        <input type="text" id="f-dept-projects" placeholder="如：XX区网格巡查项目，XX河监测项目">
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-ghost" data-close>取消</button>
+      <button class="btn btn-primary" id="f-dept-save">保存</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===================== 弹窗：卡点表单 ===================== -->
+<div class="modal-overlay" id="modal-blocker">
+  <div class="modal">
+    <div class="modal-head">
+      <h3 id="modal-blocker-title">添加卡点</h3>
+      <button class="modal-close" data-close title="关闭">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-item">
+        <label>问题/事项名称<i>*</i></label>
+        <input type="text" id="f-blk-title" placeholder="如：空域审批流程待明确" autocomplete="off">
+      </div>
+      <div class="form-row-2">
+        <div class="form-item">
+          <label>所属部门<i>*</i></label>
+          <select id="f-blk-dept"></select>
+        </div>
+        <div class="form-item">
+          <label>负责人<i>*</i></label>
+          <input type="text" id="f-blk-person" placeholder="请输入负责人姓名" autocomplete="off">
+        </div>
+      </div>
+      <div class="form-item">
+        <label>进展情况<i>*</i></label>
+        <textarea id="f-blk-progress" placeholder="如：已对接，待方案确认"></textarea>
+      </div>
+      <div class="form-item">
+        <label>需协助事项</label>
+        <textarea id="f-blk-help" placeholder="需要其他部门或上级协调支持的事项（选填）"></textarea>
+      </div>
+      <div class="form-item">
+        <label>状态</label>
+        <select id="f-blk-status">
+          <option value="进行中" selected>进行中</option>
+          <option value="待推进">待推进</option>
+          <option value="已解决">已解决</option>
+        </select>
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-ghost" data-close>取消</button>
+      <button class="btn btn-primary" id="f-blk-save">保存</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===================== 弹窗：统采需求表单 ===================== -->
+<div class="modal-overlay" id="modal-proc">
+  <div class="modal">
+    <div class="modal-head">
+      <h3 id="modal-proc-title">添加需求</h3>
+      <button class="modal-close" data-close title="关闭">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-row-2">
+        <div class="form-item">
+          <label>所属清单分类<i>*</i></label>
+          <select id="f-proc-cat">
+            <option value="已落地">已落地</option>
+            <option value="潜在合作">潜在合作</option>
+            <option value="未对接">未对接</option>
+          </select>
+        </div>
+        <div class="form-item" id="f-proc-follow-item">
+          <label>跟进状态</label>
+          <select id="f-proc-follow">
+            <option value="初步接触">初步接触</option>
+            <option value="方案编制中">方案编制中</option>
+            <option value="待报价">待报价</option>
+            <option value="待决策">待决策</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-row-2">
+        <div class="form-item">
+          <label>需求名称<i>*</i></label>
+          <input type="text" id="f-proc-name" placeholder="如：城市网格化巡查服务" autocomplete="off">
+        </div>
+        <div class="form-item">
+          <label>对应单位<i>*</i></label>
+          <input type="text" id="f-proc-unit" placeholder="如：城市治理事业部" autocomplete="off">
+        </div>
+      </div>
+      <div class="form-item">
+        <label>服务需求描述<i>*</i></label>
+        <textarea id="f-proc-service" placeholder="具体说明需要什么服务"></textarea>
+      </div>
+      <div class="form-row-2">
+        <div class="form-item">
+          <label>区域<i>*</i></label>
+          <input type="text" id="f-proc-region" placeholder="服务覆盖的地理区域" autocomplete="off">
+        </div>
+        <div class="form-item">
+          <label>频次<i>*</i></label>
+          <input type="text" id="f-proc-freq" placeholder="如：每月一次 / 每周两次" autocomplete="off">
+        </div>
+      </div>
+      <div class="form-item">
+        <label>预算（万元，留空显示为"待定"）</label>
+        <input type="number" id="f-proc-budget" min="0" step="0.1" placeholder="待定">
+      </div>
+      <div class="form-item">
+        <label>备注</label>
+        <textarea id="f-proc-remark" placeholder="其他补充说明（选填）"></textarea>
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-ghost" data-close>取消</button>
+      <button class="btn btn-primary" id="f-proc-save">保存</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===================== 弹窗：编辑待办 ===================== -->
+<div class="modal-overlay" id="modal-todo">
+  <div class="modal" style="max-width:480px">
+    <div class="modal-head">
+      <h3>编辑待办</h3>
+      <button class="modal-close" data-close title="关闭">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-item">
+        <label>负责人<i>*</i></label>
+        <input type="text" id="e-todo-person" placeholder="请输入负责人">
+      </div>
+      <div class="form-item">
+        <label>工作内容<i>*</i></label>
+        <textarea id="e-todo-content" placeholder="请输入工作内容"></textarea>
+      </div>
+      <div class="form-item">
+        <label>备注</label>
+        <textarea id="e-todo-remark" placeholder="选填"></textarea>
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-ghost" data-close>取消</button>
+      <button class="btn btn-primary" id="todo-edit-save">保存</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===================== 弹窗：二次确认 ===================== -->
+<div class="modal-overlay" id="modal-confirm">
+  <div class="modal modal-sm">
+    <div class="confirm-body">
+      <div class="confirm-icon">⚠️</div>
+      <h3>确认删除</h3>
+      <p id="confirm-msg">确定要删除吗？删除后不可恢复。</p>
+    </div>
+    <div class="modal-foot" style="justify-content:center">
+      <button class="btn btn-ghost" data-close>取消</button>
+      <button class="btn btn-danger" id="confirm-ok">确认删除</button>
+    </div>
+  </div>
+</div>
+
+<script src="js/app.js"></script>
+</body>
+</html>
