@@ -91,7 +91,7 @@ body { display: flow-root; }   /* 阻断 .main 外边距折叠出文档（顶栏
   position: relative;
   display: flex; align-items: center; gap: 11px; width: 100%;
   padding: 12px 14px; border: none; background: none;
-  border-radius: 12px; color: #8B99B0; font-size: 14.5px; font-weight: 500; text-align: left;
+  border-radius: 12px; color: #8B99B0; font-size: 15.5px; font-weight: 500; text-align: left;
   cursor: pointer; transition: all .2s; user-select: none;
 }
 .menu-item .mi-icon { width: 21px; height: 21px; display: inline-flex; }
@@ -257,7 +257,7 @@ select { cursor: pointer; }
 /* 人员筛选命中的格子 */
 .cal-cell.cell-hl { border-color: rgba(59, 130, 246, .55); background: #F0F6FF; box-shadow: inset 0 0 0 1px rgba(147, 197, 253, .7); }
 /* 格内待办：负责人以醒目芯片逐行展示，超出滚动 */
-.cal-todos { flex: 1; min-height: 0; overflow-y: auto; margin-top: 5px; scrollbar-width: thin; display: flex; flex-wrap: wrap; gap: 4px; align-content: flex-start; }
+.cal-todos { flex: 1; min-height: 0; overflow-y: auto; overflow-x: hidden; margin-top: 5px; scrollbar-width: thin; display: flex; flex-wrap: wrap; gap: 4px; align-content: flex-start; }
 .cal-todo-line {
   font-size: 15px; font-weight: 600; color: #1E40AF;
   line-height: 1.5; padding: 0;
@@ -269,7 +269,7 @@ select { cursor: pointer; }
 /* 人员筛选命中/未命中样式 */
 .cal-todo-line.hl {
   color: #1D4ED8; font-weight: 700;
-  transform: scale(1.18) translateY(-1px);
+  transform: scale(1.1);
   text-shadow: 0 2px 6px rgba(37, 99, 235, .35);
   background: #fff; border-radius: 6px;
   box-shadow: 0 6px 14px -6px rgba(37, 99, 235, .5), 0 0 0 1px rgba(59, 130, 246, .35);
@@ -658,7 +658,7 @@ select { cursor: pointer; }
     padding: 7px 2px; border-radius: 12px; font-size: 10.5px;
   }
   .menu-item .mi-icon, .menu-item .mi-icon svg { width: 20px; height: 20px; }
-  .menu-item .mi-text { display: block; font-size: 10.5px; line-height: 1.2; }
+  .menu-item .mi-text { display: block; font-size: 11px; line-height: 1.2; }
   .menu-item.active { box-shadow: 0 6px 16px -6px rgba(59, 99, 246, .8); }
   .menu-item.active::before { display: none; }
   .sidebar-foot { display: none; }
