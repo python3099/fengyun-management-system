@@ -7,7 +7,7 @@
      3. local  - 浏览器本地模式：localStorage（兜底方案，始终作为镜像缓存）
    ========================================================= */
 
-const APP_VERSION = '1.6.1';
+const APP_VERSION = '1.6.2';
 
 /* =========================================================
    工具函数
@@ -1174,8 +1174,12 @@ function saveBlocker() {
     const target = blockers.find(x => x.id === editingBlockerId);
     if (target) { Object.assign(target, data); toast('卡点已更新'); }
   } else {
-    blockers.push(Object.assign({ id: uid() }, data));   // 追加到末尾，可用拖拽调整位置
-    toast('卡点添加成功');
+    /* 新增：同部门归类——已有该部门的卡点时插入到该部门分组的最前面 */
+    const idx = blockers.findIndex(b => b.department === department);
+    const item = Object.assign({ id: uid() }, data);
+    if (idx > -1) blockers.splice(idx, 0, item);
+    else blockers.push(item);
+    toast('卡点添加成功' + (idx > -1 ? '（已归类到「' + department + '」分组）' : ''));
   }
   saveBlockers(); renderBlockers();
   closeModal('#modal-blocker');
@@ -1302,18 +1306,21 @@ function renderProc() {
   let seq = 0;
   groups.forEach(g => {
     const collapsed = collapsedProcUnits.has(g.unit);
+    /* 预算合计：组内所有子需求预算求和（未填预算的子需求不计入） */
+    const budgetSum = g.items.reduce((s, p) => s + (p.budget != null ? Number(p.budget) || 0 : 0), 0);
+    const budgetText = budgetSum > 0 ? '合计 ' + formatNum(budgetSum) + ' 万' : '待定';
     html += '<tr class="proc-group" data-unit="' + esc(g.unit) + '">' +
-      '<td colspan="9"><div class="g-row">' +
-        '<span class="g-left">' +
+      '<td colspan="2"><div class="g-row">' +
           '<span class="expand-caret">' + (collapsed ? '▸' : '▾') + '</span> ' +
           '<span class="g-unit">' + esc(g.unit) + '</span>' +
-          '<span class="g-count">' + g.items.length + ' 项需求</span>' +
-        '</span>' +
-        '<span class="g-ops">' +
+      '</div></td>' +
+      '<td class="g-count-cell"><span class="g-count">' + g.items.length + ' 项需求</span></td>' +
+      '<td colspan="3"></td>' +
+      '<td class="g-budget-cell">' + budgetText + '</td>' +
+      '<td colspan="2"><div class="g-ops">' +
           '<button type="button" class="btn btn-ghost btn-xs" data-g-add title="在该部门下新增子需求">＋ 子需求</button>' +
           '<button type="button" class="btn btn-ghost btn-xs" data-g-rename title="重命名该部门">重命名</button>' +
-        '</span></div>' +
-      '</td>' +
+      '</div></td>' +
     '</tr>';
     if (!collapsed) {
       g.items.forEach(p => { html += procRowHTML(p, ++seq); });

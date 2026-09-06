@@ -251,13 +251,12 @@ select { cursor: pointer; }
 /* 格内待办：负责人以醒目芯片逐行展示，超出滚动 */
 .cal-todos { flex: 1; min-height: 0; overflow-y: auto; margin-top: 5px; scrollbar-width: thin; display: flex; flex-wrap: wrap; gap: 4px; align-content: flex-start; }
 .cal-todo-line {
-  font-size: 20px; font-weight: 600; color: #1E40AF;
-  background: rgba(59, 130, 246, .10);
-  line-height: 1.4; padding: 2px 8px;
-  white-space: nowrap; overflow: hidden; text-overflow: ellipsis; border-radius: 9px;
+  font-size: 15px; font-weight: 600; color: #1E40AF;
+  line-height: 1.5; padding: 0;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
   max-width: 100%;
 }
-.cal-todo-line:hover { background: #2563EB; color: #fff; }
+.cal-todo-line:hover { color: #2563EB; text-decoration: underline; }
 /* 人员筛选命中/未命中样式 */
 .cal-todo-line.hl { background: var(--grad); color: #fff; font-weight: 600; box-shadow: 0 3px 8px -3px rgba(59, 99, 246, .6); }
 .cal-todo-line.hl:hover { background: var(--grad-deep); color: #fff; }
@@ -510,6 +509,8 @@ select { cursor: pointer; }
 .proc-table tr.proc-group:hover td { background: linear-gradient(90deg, #E3EDFF, #F4F8FF 60%); }
 .proc-table tr.proc-group .g-row { display: flex; align-items: center; gap: 4px; width: 100%; }
 .proc-table tr.proc-group .g-left { display: inline-flex; align-items: center; gap: 4px; min-width: 0; }
+.proc-table tr.proc-group .g-count-cell { padding: 9px 10px !important; }
+.proc-table tr.proc-group .g-budget-cell { font-weight: 700; color: #1E3A8A; font-variant-numeric: tabular-nums; white-space: nowrap; }
 .proc-table tr.proc-group .g-unit { letter-spacing: .2px; }
 .proc-table tr.proc-group .g-count {
   margin-left: 10px; font-size: 11.5px; font-weight: 600; color: #2563EB;
