@@ -70,5 +70,29 @@
     "budget": null,
     "follow": "初步接触",
     "remark": "拟结合现有网格巡查数据开展试点"
+  },
+  {
+    "id": "mtp830eh-o7rj49",
+    "category": "已落地",
+    "name": "市政设施航拍巡检",
+    "unit": "住建局",
+    "service": "桥梁、高架等市政设施定期航拍巡检",
+    "region": "中心城区",
+    "freq": "每月一次",
+    "budget": 60,
+    "follow": "",
+    "remark": ""
+  },
+  {
+    "id": "mtp83os8-13c84k",
+    "category": "已落地",
+    "name": "公园绿地巡查服务",
+    "unit": "住建局",
+    "service": "主要公园绿地无人机巡查与人流监测",
+    "region": "市属 12 座公园",
+    "freq": "每周一次",
+    "budget": null,
+    "follow": "",
+    "remark": ""
   }
 ]

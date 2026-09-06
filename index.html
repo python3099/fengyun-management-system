@@ -42,14 +42,7 @@
 
   <!-- ========== 模块一：日常待办 ========== -->
   <section class="page active" id="page-todo">
-    <div class="page-head">
-      <div>
-        <h2>日常待办</h2>
-        <p class="page-sub">以日历形式管理每日工作安排，支持待办的添加、编辑与删除</p>
-      </div>
-    </div>
-
-    <!-- 日历视图 -->
+    <!-- 日历视图（顶满整屏，点击日期弹窗管理待办） -->
     <div class="card calendar-card">
       <div class="cal-toolbar">
         <div class="cal-title" id="cal-title">--</div>
@@ -68,21 +61,6 @@
         <span>一</span><span>二</span><span>三</span><span>四</span><span>五</span><span class="lg-red">六</span><span class="lg-red">日</span>
       </div>
       <div class="cal-grid" id="cal-grid"></div>
-    </div>
-
-    <!-- 选中日期的待办管理面板 -->
-    <div class="card todo-panel">
-      <div class="todo-panel-head">
-        <h3 id="todo-date-title">--</h3>
-        <span class="count-badge" id="todo-count">0 项</span>
-      </div>
-      <form class="todo-form" id="todo-form" autocomplete="off">
-        <input type="text" id="todo-person" placeholder="负责人（必填）">
-        <input type="text" id="todo-content" placeholder="工作内容（必填）">
-        <input type="text" id="todo-remark" placeholder="备注（选填）">
-        <button type="submit" class="btn btn-primary">＋ 添加待办</button>
-      </form>
-      <div id="todo-list"></div>
     </div>
   </section>
 
@@ -131,24 +109,18 @@
     </div>
 
     <div class="card table-card">
-      <div class="filter-bar">
-        <label>部门<select id="filter-blk-dept"></select></label>
-        <label>负责人<select id="filter-blk-person"></select></label>
-        <label>状态<select id="filter-blk-status"></select></label>
-        <span class="filter-tip">按住行首 ⋮⋮ 上下拖动可调整顺序</span>
-      </div>
       <div class="table-wrap">
         <table class="data-table drag-table">
           <thead>
             <tr>
               <th>序号</th>
               <th class="th-drag"></th>
-              <th>所属部门</th>
+              <th>所属部门 <select id="filter-blk-dept" class="th-filter"></select></th>
               <th>问题/事项名称</th>
               <th>进展情况</th>
-              <th>负责人</th>
+              <th>负责人 <select id="filter-blk-person" class="th-filter"></select></th>
               <th>需协助事项</th>
-              <th>状态</th>
+              <th>状态 <select id="filter-blk-status" class="th-filter"></select></th>
               <th>更新时间</th>
               <th>操作</th>
             </tr>
@@ -230,6 +202,59 @@
         · 目录绑定模式：把数据保存到你选择的本地文件夹（如项目 data/ 目录），可随项目一起提交到 Git<br>
         · 导出/导入：生成或恢复 JSON 备份文件，用于跨浏览器、跨电脑迁移数据
       </p>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-ghost" data-close>关闭</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===================== 弹窗：当日待办管理 ===================== -->
+<div class="modal-overlay" id="modal-day">
+  <div class="modal" style="max-width:520px">
+    <div class="modal-head">
+      <h3 id="day-modal-title">--</h3>
+      <button class="modal-close" data-close title="关闭">×</button>
+    </div>
+    <div class="modal-body">
+      <form id="day-form" autocomplete="off" style="margin-bottom:16px">
+        <div class="form-row-2">
+          <div class="form-item">
+            <label>负责人<i>*</i></label>
+            <input type="text" id="day-person" placeholder="必填">
+          </div>
+          <div class="form-item">
+            <label>工作内容<i>*</i></label>
+            <input type="text" id="day-content" placeholder="必填">
+          </div>
+        </div>
+        <div class="form-row-2">
+          <div class="form-item" style="margin-bottom:0">
+            <label>备注</label>
+            <input type="text" id="day-remark" placeholder="选填">
+          </div>
+          <div class="form-item" style="margin-bottom:0; display:flex; align-items:flex-end">
+            <button type="submit" class="btn btn-primary" style="width:100%">＋ 添加待办</button>
+          </div>
+        </div>
+      </form>
+      <div id="day-list"></div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-ghost" data-close>关闭</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===================== 弹窗：人员本月待办 ===================== -->
+<div class="modal-overlay" id="modal-person">
+  <div class="modal" style="max-width:480px">
+    <div class="modal-head">
+      <h3 id="person-modal-title">--</h3>
+      <button class="modal-close" data-close title="关闭">×</button>
+    </div>
+    <div class="modal-body">
+      <div id="person-todo-body"></div>
     </div>
     <div class="modal-foot">
       <button class="btn btn-ghost" data-close>关闭</button>
@@ -380,34 +405,6 @@
     <div class="modal-foot">
       <button class="btn btn-ghost" data-close>取消</button>
       <button class="btn btn-primary" id="f-proc-save">保存</button>
-    </div>
-  </div>
-</div>
-
-<!-- ===================== 弹窗：编辑待办 ===================== -->
-<div class="modal-overlay" id="modal-todo">
-  <div class="modal" style="max-width:480px">
-    <div class="modal-head">
-      <h3>编辑待办</h3>
-      <button class="modal-close" data-close title="关闭">×</button>
-    </div>
-    <div class="modal-body">
-      <div class="form-item">
-        <label>负责人<i>*</i></label>
-        <input type="text" id="e-todo-person" placeholder="请输入负责人">
-      </div>
-      <div class="form-item">
-        <label>工作内容<i>*</i></label>
-        <textarea id="e-todo-content" placeholder="请输入工作内容"></textarea>
-      </div>
-      <div class="form-item">
-        <label>备注</label>
-        <textarea id="e-todo-remark" placeholder="选填"></textarea>
-      </div>
-    </div>
-    <div class="modal-foot">
-      <button class="btn btn-ghost" data-close>取消</button>
-      <button class="btn btn-primary" id="todo-edit-save">保存</button>
     </div>
   </div>
 </div>

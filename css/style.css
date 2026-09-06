@@ -17,6 +17,7 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 button { font-family: inherit; }
+body { display: flow-root; }   /* 阻断 .main 外边距折叠出文档（顶栏高度） */
 ::-webkit-scrollbar { width: 8px; height: 8px; }
 ::-webkit-scrollbar-thumb { background: rgba(100, 116, 139, .35); border-radius: 8px; border: 2px solid transparent; background-clip: content-box; }
 ::-webkit-scrollbar-thumb:hover { background-color: rgba(100, 116, 139, .55); background-clip: content-box; }
@@ -197,10 +198,16 @@ select { cursor: pointer; }
 }
 
 /* =========================================================
-   模块一：日常待办（日历 + 节假日 + 格内待办 + 人员筛选）
+   模块一：日常待办（日历顶满整屏 + 节假日 + 人员筛选）
    ========================================================= */
-.calendar-card { padding: 18px 20px 20px; margin-bottom: 18px; }
-.cal-toolbar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; flex-wrap: wrap; gap: 10px; }
+.calendar-card {
+  padding: 18px 20px 20px; margin-bottom: 0;
+  display: flex; flex-direction: column;
+  /* 顶满可视区域：页面无需上下滚动 */
+  height: calc(100vh - 132px);
+  min-height: 540px;
+}
+.cal-toolbar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; flex-wrap: wrap; gap: 10px; flex-shrink: 0; }
 .cal-title { font-size: 17.5px; font-weight: 800; color: var(--ink); font-variant-numeric: tabular-nums; letter-spacing: -0.2px; }
 .cal-nav { display: flex; gap: 8px; }
 /* 图例 */
@@ -218,11 +225,15 @@ select { cursor: pointer; }
   font-size: 12.5px; color: var(--ink-3); font-weight: 600;
   padding-bottom: 9px; border-bottom: 1px solid var(--line); margin-bottom: 8px;
 }
-.cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 7px; }
+.cal-grid {
+  display: grid; grid-template-columns: repeat(7, 1fr);
+  grid-template-rows: repeat(6, minmax(0, 1fr));
+  gap: 7px; flex: 1; min-height: 0;
+}
 .cal-cell {
-  height: 118px; border-radius: 13px; border: 1px solid rgba(15, 23, 42, .06); background: #fff;
+  border-radius: 13px; border: 1px solid rgba(15, 23, 42, .06); background: #fff;
   padding: 7px 7px 5px; cursor: pointer; display: flex; flex-direction: column;
-  transition: all .18s; overflow: hidden;
+  transition: all .18s; overflow: hidden; min-height: 0;
 }
 .cal-cell:hover { border-color: rgba(59, 130, 246, .45); background: #F5F9FF; box-shadow: 0 8px 18px -10px rgba(37, 99, 235, .45); transform: translateY(-1px); }
 .cal-cell-head { display: flex; align-items: center; justify-content: space-between; gap: 4px; flex-shrink: 0; }
@@ -237,13 +248,15 @@ select { cursor: pointer; }
 .cal-cell.cal-hol:hover { background: #FFEEEE; border-color: rgba(220, 38, 38, .3); }
 /* 人员筛选命中的格子 */
 .cal-cell.cell-hl { border-color: rgba(59, 130, 246, .55); background: #F0F6FF; box-shadow: inset 0 0 0 1px rgba(147, 197, 253, .7); }
-/* 格内待办：逐行显示负责人，超出滚动 */
+/* 格内待办：负责人以醒目芯片逐行展示，超出滚动 */
 .cal-todos { flex: 1; min-height: 0; overflow-y: auto; margin-top: 3px; scrollbar-width: thin; }
 .cal-todo-line {
-  font-size: 13px; color: var(--ink-2); line-height: 1.8; padding: 0 5px;
+  font-size: 13.5px; font-weight: 500; color: #1E40AF;
+  background: rgba(59, 130, 246, .10);
+  line-height: 1.8; padding: 0 8px; margin-bottom: 2px;
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis; border-radius: 6px;
 }
-.cal-todo-line:hover { background: #E0EAFF; color: #1D4ED8; }
+.cal-todo-line:hover { background: #2563EB; color: #fff; }
 /* 人员筛选命中/未命中样式 */
 .cal-todo-line.hl { background: var(--grad); color: #fff; font-weight: 600; box-shadow: 0 3px 8px -3px rgba(59, 99, 246, .6); }
 .cal-todo-line.hl:hover { background: var(--grad-deep); color: #fff; }
@@ -276,34 +289,29 @@ select { cursor: pointer; }
 .cal-cell.selected:hover { background: var(--grad); }
 .cal-cell.selected .cal-day { color: #fff; }
 .cal-cell.selected .cal-day.day-red { color: #FFD9D9; }
-.cal-cell.selected .cal-todo-line { color: rgba(255, 255, 255, .93); }
-.cal-cell.selected .cal-todo-line:hover { background: rgba(255, 255, 255, .2); color: #fff; }
+.cal-cell.selected .cal-todo-line { color: #fff; background: rgba(255, 255, 255, .2); }
+.cal-cell.selected .cal-todo-line:hover { background: rgba(255, 255, 255, .34); color: #fff; }
 .cal-cell.selected.cal-match { box-shadow: 0 10px 22px -10px rgba(59, 99, 246, .8), 0 0 0 2px rgba(96, 165, 250, .55); }
 
-/* 待办面板 */
-.todo-panel { padding: 20px; }
-.todo-panel-head { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; flex-wrap: wrap; }
-.todo-panel-head h3 { font-size: 16px; font-weight: 700; color: var(--ink); }
-.count-badge {
-  background: var(--grad); color: #fff; border-radius: 999px; padding: 2px 11px;
-  font-size: 12px; font-weight: 600; box-shadow: 0 4px 10px -4px rgba(59, 99, 246, .6);
+/* ---------- 当日待办管理弹窗 ---------- */
+.day-item {
+  display: flex; justify-content: space-between; align-items: flex-start; gap: 10px;
+  padding: 11px 13px; border: 1px solid rgba(15, 23, 42, .07); border-radius: 12px;
+  margin-bottom: 9px; background: rgba(248, 250, 252, .85); transition: all .15s;
 }
-.todo-form {
-  display: grid; grid-template-columns: minmax(120px, 1fr) minmax(200px, 1.8fr) minmax(140px, 1.2fr) auto;
-  gap: 10px; margin-bottom: 16px;
-}
-.todo-item {
-  display: flex; justify-content: space-between; align-items: flex-start; gap: 12px;
-  padding: 12px 14px; border: 1px solid rgba(15, 23, 42, .06); border-radius: 12px; margin-bottom: 10px;
-  background: rgba(248, 250, 252, .8); transition: all .18s;
-}
-.todo-item:hover { border-color: rgba(59, 130, 246, .4); background: #F0F6FF; box-shadow: 0 6px 16px -10px rgba(37, 99, 235, .5); }
-.todo-left { display: flex; gap: 10px; align-items: flex-start; min-width: 0; }
-.todo-texts { min-width: 0; }
-.todo-content { font-weight: 600; color: var(--ink); word-break: break-all; }
-.todo-remark { color: var(--ink-3); font-size: 12.5px; margin-top: 3px; word-break: break-all; }
-.todo-time { color: var(--ink-4); font-size: 12px; margin-top: 3px; }
-.todo-ops { display: flex; gap: 6px; flex-shrink: 0; }
+.day-item:hover { border-color: rgba(59, 130, 246, .4); background: #F0F6FF; }
+.day-item-editing { background: #F5F9FF; border-color: rgba(59, 130, 246, .45); }
+.day-item-head { display: flex; align-items: center; gap: 8px; margin-bottom: 4px; }
+.day-item-time { color: var(--ink-4); font-size: 12px; }
+.day-item-content { font-weight: 600; color: var(--ink); word-break: break-all; }
+.day-item-remark { color: var(--ink-3); font-size: 12.5px; margin-top: 3px; word-break: break-all; }
+.day-item-ops { display: flex; gap: 6px; flex-shrink: 0; }
+.day-edit-form { display: flex; flex-direction: column; gap: 7px; flex: 1; min-width: 0; }
+.day-edit-form input { padding: 7px 10px; font-size: 13px; }
+
+/* ---------- 人员本月待办弹窗 ---------- */
+.person-day-group { margin-bottom: 14px; }
+.pdg-date { display: flex; align-items: center; gap: 7px; font-weight: 700; color: var(--ink); font-size: 13px; margin-bottom: 7px; }
 
 /* =========================================================
    模块二：运营情况（部门 + 多合同）
@@ -422,15 +430,24 @@ select { cursor: pointer; }
 .drag-table td.drag-handle:hover { color: #2563EB; }
 .drag-table tr.dragging { opacity: .45; background: #EFF6FF !important; }
 .drag-table tr.drag-over td { border-top: 2px solid #3B82F6; background: #F0F7FF; }
-
-/* 表格筛选栏（进度卡点） */
-.filter-bar {
-  display: flex; align-items: center; gap: 14px; flex-wrap: wrap;
-  padding: 12px 15px; border-bottom: 1px solid rgba(15, 23, 42, .06); background: rgba(248, 250, 252, .8);
+/* 长按拖起后的浮动效果：白底描边 + 投影 + 微放大 */
+.drag-table tr.drag-floating td {
+  background: #fff !important;
+  border-top: 1.5px solid #3B82F6 !important;
+  border-bottom: 1.5px solid #3B82F6 !important;
+  box-shadow: 0 14px 30px -12px rgba(15, 23, 42, .4);
 }
-.filter-bar label { display: flex; align-items: center; gap: 6px; font-size: 13px; color: var(--ink-2); font-weight: 600; white-space: nowrap; }
-.filter-bar select { width: auto; min-width: 130px; padding: 6px 10px; font-size: 13px; }
-.filter-tip { color: var(--ink-4); font-size: 12px; margin-left: auto; }
+.drag-table tr.drag-floating td:first-child { border-left: 1.5px solid #3B82F6; border-radius: 8px 0 0 8px; }
+.drag-table tr.drag-floating td:last-child { border-right: 1.5px solid #3B82F6; border-radius: 0 8px 8px 0; }
+
+/* 表头内嵌筛选下拉（进度卡点） */
+.th-filter {
+  width: auto; min-width: 86px; padding: 3.5px 8px; font-size: 12.5px; font-weight: 500;
+  border-radius: 8px; border: 1px solid rgba(15, 23, 42, .14);
+  background: rgba(255, 255, 255, .8); color: var(--ink-2); margin-left: 6px;
+}
+.th-filter:hover { border-color: rgba(59, 130, 246, .55); }
+.th-filter:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(59, 130, 246, .14); }
 
 /* =========================================================
    模块四：来年统采（表格）
@@ -457,6 +474,23 @@ select { cursor: pointer; }
   border-left: none; box-shadow: inset 4px 0 0 #EF4444;
 }
 .proc-table tbody tr.row-danger:hover td { background: #FFEEEE; }
+
+/* 部门分组行（来年统采：按单位分组的子需求） */
+.proc-table tr.proc-group td {
+  background: linear-gradient(90deg, #EEF4FF, #F8FAFC 60%);
+  border-top: 1px solid rgba(59, 130, 246, .14);
+  border-bottom: 1px solid rgba(59, 130, 246, .1);
+  padding: 10px 15px; cursor: pointer; user-select: none;
+  font-weight: 700; color: #1E3A8A; font-size: 13.5px;
+}
+.proc-table tr.proc-group:hover td { background: linear-gradient(90deg, #E3EDFF, #F4F8FF 60%); }
+.proc-table tr.proc-group .g-unit { letter-spacing: .2px; }
+.proc-table tr.proc-group .g-count {
+  margin-left: 10px; font-size: 11.5px; font-weight: 600; color: #2563EB;
+  background: rgba(59, 130, 246, .12); border-radius: 999px; padding: 1px 9px;
+}
+/* 组内子需求序号 */
+.g-child-no { color: #2563EB; font-weight: 700; margin-right: 4px; font-variant-numeric: tabular-nums; }
 
 /* 点击行展开/收缩详情 */
 .proc-table tbody tr { cursor: pointer; }
@@ -534,11 +568,9 @@ select { cursor: pointer; }
    响应式
    ========================================================= */
 @media (max-width: 1500px) {
-  .cal-cell { height: 108px; }
+  .calendar-card { min-height: 500px; }
 }
 @media (max-width: 1200px) {
-  .todo-form { grid-template-columns: 1fr 1fr; }
-  .todo-form .btn { grid-column: 1 / -1; }
   .form-row-3 { grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); }
 }
 /* 中屏：侧边栏收窄为图标栏 */
@@ -610,7 +642,9 @@ select { cursor: pointer; }
   .person-chip { padding: 3px 10px; font-size: 12px; }
   .cal-week-header { font-size: 11.5px; padding-bottom: 6px; margin-bottom: 6px; }
   .cal-grid { gap: 4px; }
-  .cal-cell { height: 64px; padding: 4px 4px 3px; border-radius: 9px; }
+  .calendar-card { height: auto; min-height: 0; }
+  .cal-grid { flex: none; grid-template-rows: repeat(6, 66px); }
+  .cal-cell { padding: 4px 4px 3px; border-radius: 9px; }
   .cal-day { font-size: 12px; }
   .day-badge { width: 14px; height: 14px; font-size: 9.5px; border-radius: 4.5px; }
   .cal-todos { overflow: hidden; margin-top: 2px; }
@@ -618,14 +652,11 @@ select { cursor: pointer; }
   /* 小屏每格最多显示 2 行 */
   .cal-todo-line:nth-child(n+3) { display: none; }
 
-  .todo-form { grid-template-columns: 1fr; gap: 8px; }
-  .todo-panel { padding: 15px; }
 
   /* 表格：整体横向滑动 */
   .filter-bar { gap: 8px; padding: 10px 10px; }
   .filter-bar label { font-size: 12px; gap: 4px; }
   .filter-bar select { min-width: 0; flex: 1; padding: 7px 8px; }
-  .filter-tip { display: none; }
   .data-table { min-width: 700px; font-size: 12.5px; }
   .data-table th { padding: 10px 9px; }
   .data-table td { padding: 10px 9px; }
@@ -648,5 +679,5 @@ select { cursor: pointer; }
 @media (max-width: 380px) {
   .stat-grid { grid-template-columns: 1fr 1fr; }
   .sys-title { font-size: 12.5px; }
-  .cal-cell { height: 58px; }
+  .cal-grid { grid-template-rows: repeat(6, 58px); }
 }

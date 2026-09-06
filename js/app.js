@@ -7,7 +7,7 @@
      3. local  - 浏览器本地模式：localStorage（兜底方案，始终作为镜像缓存）
    ========================================================= */
 
-const APP_VERSION = '1.4.0';
+const APP_VERSION = '1.5.0';
 
 /* =========================================================
    工具函数
@@ -551,7 +551,6 @@ function bindNav() {
 let calY, calM;             // 当前日历显示的年/月
 let selectedDate;           // 当前选中的日期（YYYY-MM-DD）
 let personFilter = '';      // 本月人员筛选（空 = 不筛选；选中后仅高亮该人的待办）
-let editTodoDate = '';      // 正在编辑的待办所属日期
 let editTodoId = '';        // 正在编辑的待办 id
 
 function bindTodoEvents() {
@@ -560,24 +559,42 @@ function bindTodoEvents() {
   $('#cal-today').addEventListener('click', () => {
     const now = new Date();
     calY = now.getFullYear(); calM = now.getMonth();
-    selectedDate = fmtDate(now);
-    renderCalendar(); renderTodoPanel();
+    renderCalendar();
   });
-  $('#todo-form').addEventListener('submit', e => { e.preventDefault(); addTodo(); });
-  $('#todo-edit-save').addEventListener('click', saveTodoEdit);
 
-  /* 待办列表内编辑/删除（事件委托） */
-  $('#todo-list').addEventListener('click', e => {
+  /* 日历点击（事件委托）：
+     - 点击格内的负责人行 => 弹出该人员本月待办
+     - 点击日期格其他位置 => 弹出当日待办管理（增/改/删） */
+  $('#cal-grid').addEventListener('click', e => {
+    const line = e.target.closest('.cal-todo-line');
+    const cell = e.target.closest('.cal-cell');
+    if (!cell) return;
+    const key = cell.dataset.date;
+    if (line) { openPersonModal(line.dataset.person); return; }
+    selectedDate = key;
+    if (key) openDayModal(key);
+  });
+
+  /* 当日待办弹窗：添加 + 列表编辑/删除（事件委托） */
+  $('#day-form').addEventListener('submit', e => {
+    e.preventDefault();
+    addDayTodo();
+  });
+  $('#day-list').addEventListener('click', e => {
     const editBtn = e.target.closest('[data-edit-todo]');
     const delBtn = e.target.closest('[data-del-todo]');
-    if (editBtn) openTodoEdit(editBtn.dataset.editTodo);
+    const saveBtn = e.target.closest('[data-save-edit]');
+    const cancelBtn = e.target.closest('[data-cancel-edit]');
+    if (editBtn) { editTodoId = editBtn.dataset.editTodo; renderDayList(); }
+    if (cancelBtn) { editTodoId = ''; renderDayList(); }
+    if (saveBtn) saveDayTodoEdit(saveBtn.dataset.saveEdit);
     if (delBtn) {
       const id = delBtn.dataset.delTodo;
       const t = (todos[selectedDate] || []).find(x => x.id === id);
       confirmDialog('确定要删除「' + ((t && t.content) || '') + '」这条待办吗？删除后不可恢复。', () => {
         todos[selectedDate] = (todos[selectedDate] || []).filter(x => x.id !== id);
         if (!todos[selectedDate].length) delete todos[selectedDate];
-        saveTodos(); renderCalendar(); renderTodoPanel();
+        saveTodos(); renderCalendar(); renderDayList();
         toast('待办已删除');
       });
     }
@@ -616,10 +633,10 @@ function renderCalendar() {
 
     const cell = document.createElement('div');
     cell.className = 'cal-cell';
+    cell.dataset.date = key;
     if (d.getMonth() !== calM) cell.classList.add('other-month');
     if (isRest) cell.classList.add('cal-hol');
     if (key === todayStr) cell.classList.add('today');
-    if (key === selectedDate) cell.classList.add('selected');
     cell.title = hol ? hol.name + (isRest ? '（放假）' : '（调休上班）') : '';
 
     const redDay = (isWeekend || isRest) ? ' day-red' : '';
@@ -631,19 +648,14 @@ function renderCalendar() {
       const hit = personFilter && t.person === personFilter;
       if (hit) hasFiltered = true;
       const cls = personFilter ? (hit ? ' hl' : ' dim') : '';
-      return '<div class="cal-todo-line' + cls + '" title="' + esc(t.person) + '：' + esc(t.content) + '">' + esc(t.person) + '</div>';
+      return '<div class="cal-todo-line' + cls + '" data-person="' + esc(t.person) +
+        '" title="点击查看 ' + esc(t.person) + ' 本月待办">' + esc(t.person) + '</div>';
     }).join('');
     if (hasFiltered) cell.classList.add('cell-hl');
 
     cell.innerHTML =
       '<div class="cal-cell-head"><span class="cal-day' + redDay + '">' + d.getDate() + '</span>' + badge + '</div>' +
       '<div class="cal-todos">' + lines + '</div>';
-
-    cell.addEventListener('click', () => {
-      selectedDate = key;
-      if (d.getMonth() !== calM) { calY = d.getFullYear(); calM = d.getMonth(); }  // 点击相邻月份日期时自动切换月份
-      renderCalendar(); renderTodoPanel();
-    });
     grid.appendChild(cell);
   }
 
@@ -682,72 +694,112 @@ function bindPersonLegend() {
   });
 }
 
-/* 渲染选中日期的待办面板 */
-function renderTodoPanel() {
-  const parts = selectedDate.split('-').map(Number);
+/* ========== 当日待办管理弹窗（点击日期格打开） ========== */
+function openDayModal(dateKey) {
+  selectedDate = dateKey;
+  editTodoId = '';
+  const parts = dateKey.split('-').map(Number);
   const week = '日一二三四五六'[new Date(parts[0], parts[1] - 1, parts[2]).getDay()];
-  $('#todo-date-title').textContent = selectedDate + '（周' + week + '）待办事项';
-  const list = todos[selectedDate] || [];
-  $('#todo-count').textContent = list.length + ' 项';
-  $('#todo-list').innerHTML = list.length
-    ? list.map(todoItemHTML).join('')
-    : '<div class="empty-state">该日暂无待办，请在上方表单中添加</div>';
+  const hol = HOLIDAYS[dateKey];
+  $('#day-modal-title').textContent =
+    dateKey.replace(/-/g, '/') + '（周' + week + '）' + (hol && hol.type === 'rest' ? ' · ' + hol.name : '');
+  $('#day-person').value = ''; $('#day-content').value = ''; $('#day-remark').value = '';
+  renderDayList();
+  openModal('#modal-day');
 }
 
-function todoItemHTML(t) {
-  return '<div class="todo-item">' +
-    '<div class="todo-left">' +
-      '<span class="tag tag-person">' + esc(t.person) + '</span>' +
-      '<div class="todo-texts">' +
-        '<div class="todo-content">' + esc(t.content) + '</div>' +
-        (t.remark ? '<div class="todo-remark">备注：' + esc(t.remark) + '</div>' : '') +
-        '<div class="todo-time">添加时间：' + esc(t.createTime) + '</div>' +
-      '</div>' +
+function renderDayList() {
+  const list = todos[selectedDate] || [];
+  $('#day-list').innerHTML = list.length
+    ? list.map(t => t.id === editTodoId ? dayEditItemHTML(t) : dayItemHTML(t)).join('')
+    : '<div class="empty-state" style="padding:22px 0">该日暂无待办，在上方填写后点击「添加待办」</div>';
+}
+
+function dayItemHTML(t) {
+  return '<div class="day-item">' +
+    '<div class="day-item-main">' +
+      '<div class="day-item-head"><span class="tag tag-person">' + esc(t.person) + '</span>' +
+        '<span class="day-item-time">' + esc(t.createTime) + '</span></div>' +
+      '<div class="day-item-content">' + esc(t.content) + '</div>' +
+      (t.remark ? '<div class="day-item-remark">备注：' + esc(t.remark) + '</div>' : '') +
     '</div>' +
-    '<div class="todo-ops">' +
+    '<div class="day-item-ops">' +
       '<button class="btn btn-ghost btn-xs" data-edit-todo="' + t.id + '">编辑</button>' +
       '<button class="btn btn-danger-ghost btn-xs" data-del-todo="' + t.id + '">删除</button>' +
     '</div>' +
   '</div>';
 }
 
-/* 添加待办（写入当前选中日期） */
-function addTodo() {
-  const person = $('#todo-person').value.trim();
-  const content = $('#todo-content').value.trim();
-  const remark = $('#todo-remark').value.trim();
+/* 行内编辑态 */
+function dayEditItemHTML(t) {
+  return '<div class="day-item day-item-editing">' +
+    '<div class="day-edit-form">' +
+      '<input type="text" id="edit-person" value="' + esc(t.person) + '" placeholder="负责人（必填）">' +
+      '<input type="text" id="edit-content" value="' + esc(t.content) + '" placeholder="工作内容（必填）">' +
+      '<input type="text" id="edit-remark" value="' + esc(t.remark || '') + '" placeholder="备注（选填）">' +
+    '</div>' +
+    '<div class="day-item-ops">' +
+      '<button class="btn btn-primary btn-xs" data-save-edit="' + t.id + '">保存</button>' +
+      '<button class="btn btn-ghost btn-xs" data-cancel-edit="1">取消</button>' +
+    '</div>' +
+  '</div>';
+}
+
+/* 当日弹窗内添加待办 */
+function addDayTodo() {
+  const person = $('#day-person').value.trim();
+  const content = $('#day-content').value.trim();
+  const remark = $('#day-remark').value.trim();
   if (!person) return toast('请填写负责人', 'error');
   if (!content) return toast('请填写工作内容', 'error');
   (todos[selectedDate] = todos[selectedDate] || []).push({
     id: uid(), person: person, content: content, remark: remark, createTime: fmtDateTime(new Date())
   });
   saveTodos();
-  $('#todo-person').value = ''; $('#todo-content').value = ''; $('#todo-remark').value = '';
-  renderCalendar(); renderTodoPanel();
+  $('#day-person').value = ''; $('#day-content').value = ''; $('#day-remark').value = '';
+  renderCalendar(); renderDayList();
   toast('待办添加成功');
 }
 
-function openTodoEdit(id) {
-  const t = (todos[selectedDate] || []).find(x => x.id === id);
-  if (!t) return;
-  editTodoDate = selectedDate; editTodoId = id;
-  $('#e-todo-person').value = t.person;
-  $('#e-todo-content').value = t.content;
-  $('#e-todo-remark').value = t.remark || '';
-  openModal('#modal-todo');
-}
-
-function saveTodoEdit() {
-  const person = $('#e-todo-person').value.trim();
-  const content = $('#e-todo-content').value.trim();
+/* 当日弹窗内保存行内编辑 */
+function saveDayTodoEdit(id) {
+  const person = $('#edit-person').value.trim();
+  const content = $('#edit-content').value.trim();
   if (!person) return toast('请填写负责人', 'error');
   if (!content) return toast('请填写工作内容', 'error');
-  const t = (todos[editTodoDate] || []).find(x => x.id === editTodoId);
-  if (!t) { closeModal('#modal-todo'); return; }
-  t.person = person; t.content = content; t.remark = $('#e-todo-remark').value.trim();
-  saveTodos(); renderCalendar(); renderTodoPanel();
-  closeModal('#modal-todo');
+  const t = (todos[selectedDate] || []).find(x => x.id === id);
+  if (!t) { editTodoId = ''; renderDayList(); return; }
+  t.person = person; t.content = content; t.remark = $('#edit-remark').value.trim();
+  editTodoId = '';
+  saveTodos(); renderCalendar(); renderDayList();
   toast('待办已更新');
+}
+
+/* ========== 人员本月待办弹窗（点击日历中的人名打开） ========== */
+function openPersonModal(person) {
+  const list = [];
+  const last = new Date(calY, calM + 1, 0).getDate();
+  for (let d = 1; d <= last; d++) {
+    const key = fmtDate(new Date(calY, calM, d));
+    (todos[key] || []).forEach(t => { if (t.person === person) list.push({ date: key, t }); });
+  }
+  $('#person-modal-title').textContent = person + ' · ' + (calM + 1) + '月待办（' + list.length + ' 项）';
+  $('#person-todo-body').innerHTML = list.length
+    ? list.map(({ date, t }) => {
+        const hol = HOLIDAYS[date];
+        return '<div class="person-day-group">' +
+          '<div class="pdg-date">' + date.slice(5).replace('-', ' / ') +
+            '<span class="tag tag-gray">' + '周' + '日一二三四五六'[new Date(date + 'T00:00:00').getDay()] + '</span>' +
+            (hol && hol.type === 'rest' ? '<span class="tag tag-red">' + hol.name + '</span>' : '') +
+          '</div>' +
+          '<div class="day-item"><div class="day-item-main">' +
+            '<div class="day-item-content">' + esc(t.content) + '</div>' +
+            (t.remark ? '<div class="day-item-remark">备注：' + esc(t.remark) + '</div>' : '') +
+          '</div></div>' +
+        '</div>';
+      }).join('')
+    : '<div class="empty-state" style="padding:22px 0">' + esc(person) + ' 本月暂无待办</div>';
+  openModal('#modal-person');
 }
 
 /* =========================================================
@@ -843,7 +895,7 @@ function openDeptModal(dept) {
   wrap.innerHTML = '';
   const list = (dept && dept.contracts && dept.contracts.length) ? dept.contracts : [null];
   list.forEach(c => addContractBox(c && c.name ? c : null));
-  openModal('#modal-dept');
+  renumberContractBoxes();   // 编辑弹窗内的合同块按序号区分（合同 #1 / #2 / #3）
 }
 
 /* 合同编辑块（动态添加/删除，块内含问题分类明细行） */
@@ -1016,7 +1068,7 @@ function enableRowDrag(tbodySel, onCommit) {
     /* 拖拽中的行已被移出表格（如中途被重新渲染）时放弃本次拖拽 */
     if (!tbody.contains(st.tr)) { st = null; return; }
     if (!st.moved && Math.abs(e.clientY - st.startY) < 4) return;
-    if (!st.moved) { st.moved = true; st.tr.classList.add('dragging'); document.body.style.cursor = 'grabbing'; }
+    if (!st.moved) { st.moved = true; st.tr.classList.add('dragging', 'drag-floating'); document.body.style.cursor = 'grabbing'; }
     const rect = tbody.getBoundingClientRect();
     if (e.clientY < rect.top - 16 || e.clientY > rect.bottom + 16) return;
     const others = [...tbody.querySelectorAll('tr[data-id]')].filter(r => r !== st.tr);
@@ -1034,7 +1086,7 @@ function enableRowDrag(tbodySel, onCommit) {
     const { tr, moved } = st;
     st = null;
     document.body.style.cursor = '';
-    tr.classList.remove('dragging');
+    tr.classList.remove('dragging', 'drag-floating');
     if (moved) onCommit();
   });
 }
@@ -1133,7 +1185,8 @@ function saveBlocker() {
    ========================================================= */
 let currentProcTab = '已落地';
 let editingProcId = null;
-const expandedProcIds = new Set();   // 当前展开详情的需求行（点击行展开/收缩）
+const expandedProcIds = new Set();      // 当前展开详情的需求行（点击行展开/收缩）
+const collapsedProcUnits = new Set();   // 收起的需求分组（按单位/部门）
 const FOLLOW_CLASS = { '初步接触': 'tag-cyan', '方案编制中': 'tag-blue', '待报价': 'tag-orange', '待决策': 'tag-purple' };
 
 function bindProcEvents() {
@@ -1159,7 +1212,15 @@ function bindProcEvents() {
       });
       return;
     }
-    /* 点击行其他位置：展开/收缩详情（服务需求描述与备注） */
+    /* 点击分组头：展开/收起该部门下的全部子需求 */
+    const groupHead = e.target.closest('.proc-group');
+    if (groupHead) {
+      const unit = groupHead.dataset.unit;
+      if (collapsedProcUnits.has(unit)) collapsedProcUnits.delete(unit); else collapsedProcUnits.add(unit);
+      renderProc();
+      return;
+    }
+    /* 点击需求行其他位置：展开/收缩该条需求的详情（服务需求描述与备注） */
     if (e.target.closest('.drag-handle')) return;
     const tr = e.target.closest('tr[data-id]');
     if (!tr) return;
@@ -1168,12 +1229,17 @@ function bindProcEvents() {
     renderProc();
   });
 
-  /* 自定义指针拖拽：仅在当前分类清单内部调整顺序 */
+  /* 自定义指针拖拽：在当前分类清单内部调整顺序（收起的分组不参与） */
   enableRowDrag('#proc-tbody', () => {
-    procs = commitDomOrder($('#proc-tbody'), procs, p => p.category === currentProcTab);
+    procs = commitDomOrder($('#proc-tbody'), procs, isProcVisible);
     saveProcs(); renderProc();
     toast('排序已保存');
   });
+}
+
+/* 该需求当前是否显示在表格中（分类匹配且所在分组未收起） */
+function isProcVisible(p) {
+  return p.category === currentProcTab && !collapsedProcUnits.has(p.unit);
 }
 
 function renderProc() {
@@ -1183,20 +1249,42 @@ function renderProc() {
     t.classList.toggle('active', t.dataset.tab === currentProcTab);
     t.querySelector('.tab-count').textContent = counts[t.dataset.tab] || 0;
   });
+  /* 按单位/部门分组展示：分组头 + 组内子需求 1. 2. 3.（分组可点击收起） */
   const list = procs.filter(p => p.category === currentProcTab);
-  $('#proc-tbody').innerHTML = list.map((p, i) => procRowHTML(p, i)).join('');
+  const groups = [];
+  list.forEach(p => {
+    let g = groups.find(x => x.unit === p.unit);
+    if (!g) { g = { unit: p.unit, items: [] }; groups.push(g); }
+    g.items.push(p);
+  });
+  let html = '';
+  let seq = 0;
+  groups.forEach(g => {
+    const collapsed = collapsedProcUnits.has(g.unit);
+    html += '<tr class="proc-group" data-unit="' + esc(g.unit) + '">' +
+      '<td colspan="11">' +
+        '<span class="expand-caret">' + (collapsed ? '▸' : '▾') + '</span> ' +
+        '<span class="g-unit">' + esc(g.unit) + '</span>' +
+        '<span class="g-count">' + g.items.length + ' 项需求</span>' +
+      '</td>' +
+    '</tr>';
+    if (!collapsed) {
+      g.items.forEach((p, gi) => { html += procRowHTML(p, ++seq, gi + 1); });
+    }
+  });
+  $('#proc-tbody').innerHTML = html;
   $('#proc-empty').style.display = list.length ? 'none' : '';
 }
 
-function procRowHTML(p, i) {
+function procRowHTML(p, seq, childNo) {
   const danger = p.category === '未对接';
   const expanded = expandedProcIds.has(p.id);
   return '<tr data-id="' + p.id + '" class="' + (danger ? 'row-danger' : '') + (expanded ? ' tr-expanded' : '') + '">' +
-    '<td>' + (i + 1) + '</td>' +
-    '<td class="drag-handle" title="按住拖动调整顺序">⋮⋮</td>' +
+    '<td>' + seq + '</td>' +
+    '<td class="drag-handle" title="按住拖动调整顺序（组内）">⋮⋮</td>' +
     '<td class="td-title"><span class="expand-caret">' + (expanded ? '▾' : '▸') + '</span> ' + esc(p.unit) +
       (danger ? ' <span class="tag tag-red">重点关注</span>' : '') + '</td>' +
-    '<td>' + esc(p.name) + '</td>' +
+    '<td><span class="g-child-no">' + childNo + '.</span> ' + esc(p.name) + '</td>' +
     '<td class="td-wrap td-clamp">' + esc(p.service) + '</td>' +
     '<td>' + esc(p.region) + '</td>' +
     '<td>' + esc(p.freq) + '</td>' +
@@ -1309,7 +1397,6 @@ function toast(msg, type = 'success') {
    ========================================================= */
 function renderAllModules() {
   renderCalendar();
-  renderTodoPanel();
   renderOps();
   renderBlockers();
   renderProc();
