@@ -48,12 +48,13 @@ body { display: flow-root; }   /* 阻断 .main 外边距折叠出文档（顶栏
 }
 .topbar-left { display: flex; align-items: center; gap: 12px; min-width: 0; }
 .logo {
-  width: 38px; height: 38px; border-radius: 11px; flex-shrink: 0;
-  background: var(--grad);
+  height: 40px; border-radius: 9px; flex-shrink: 0;
+  background: #fff; padding: 2px 8px;
   display: flex; align-items: center; justify-content: center;
-  box-shadow: 0 0 0 1px rgba(255, 255, 255, .18) inset, 0 6px 18px -6px rgba(79, 70, 229, .8);
+  box-shadow: 0 6px 18px -6px rgba(2, 6, 23, .8);
   transition: transform .3s;
 }
+.logo img { height: 100%; width: auto; max-width: 92px; object-fit: contain; display: block; }
 .logo:hover { transform: rotate(-6deg) scale(1.05); }
 .sys-title {
   font-size: 16.5px; font-weight: 700; letter-spacing: .3px;
@@ -633,8 +634,8 @@ select { cursor: pointer; }
    ========================================================= */
 @media (max-width: 768px) {
   .topbar { height: 56px; padding: 0 12px; }
-  .logo { width: 33px; height: 33px; border-radius: 9px; }
-  .logo svg { width: 21px; height: 21px; }
+  .logo { height: 33px; border-radius: 8px; padding: 2px 5px; }
+  .logo img { height: 100%; max-width: 66px; }
   .sys-title { font-size: 14px; }
   .login-btn { padding: 5px 10px; font-size: 12px; border-radius: 9px; }
 
@@ -757,11 +758,11 @@ body.not-authed .main { display: none !important; }
   80% { transform: translateX(4px); }
 }
 .login-logo {
-  width: 62px; height: 62px; margin: 0 auto 18px; border-radius: 18px;
-  background: linear-gradient(135deg, #3B82F6, #6366F1);
+  margin: 0 auto 16px; padding: 6px 14px;
   display: flex; align-items: center; justify-content: center;
-  box-shadow: 0 0 0 1px rgba(255,255,255,.2) inset, 0 14px 30px -10px rgba(79, 70, 229, .7);
+  border-radius: 12px;
 }
+.login-logo img { height: 64px; width: auto; max-width: 200px; object-fit: contain; display: block; }
 .login-title { font-size: 19px; font-weight: 800; color: var(--ink); letter-spacing: .5px; }
 .login-sub { color: var(--ink-3); font-size: 13px; margin: 8px 0 26px; }
 #login-form { display: flex; flex-direction: column; gap: 12px; }
