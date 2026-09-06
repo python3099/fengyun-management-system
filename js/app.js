@@ -7,7 +7,7 @@
      3. local  - 浏览器本地模式：localStorage（兜底方案，始终作为镜像缓存）
    ========================================================= */
 
-const APP_VERSION = '1.7.2';
+const APP_VERSION = '1.7.3';
 
 /* =========================================================
    工具函数
@@ -644,21 +644,18 @@ function renderCalendar() {
                 : isWork ? '<span class="day-badge badge-work" title="' + esc(hol.name) + '调休，这天要上班">班</span>'
                 : '';
     let hasFiltered = false;
-    const lines = dayList.map(t => {
+    const chips = dayList.map(t => {
       const hit = personFilter && t.person === personFilter;
       if (hit) hasFiltered = true;
       const cls = personFilter ? (hit ? ' hl' : ' dim') : '';
       return '<div class="cal-todo-line' + cls + '" data-person="' + esc(t.person) +
-        '" title="点击查看 ' + esc(t.person) + ' 本月待办｜' + esc(t.content) + (t.remark ? '（备注：' + esc(t.remark) + '）' : '') + '">' +
-          '<span class="tl-person">' + esc(t.person) + '</span>' +
-          '<span class="tl-text">' + esc(t.content) + '</span>' +
-        '</div>';
+        '" title="点击查看 ' + esc(t.person) + ' 本月待办｜' + esc(t.content) + (t.remark ? '（备注：' + esc(t.remark) + '）' : '') + '">' + esc(t.person) + '</div>';
     }).join('');
     if (hasFiltered) cell.classList.add('cell-hl');
 
+    // 日期号与人员芯片同一行流式排列（日期不再独占一行）
     cell.innerHTML =
-      '<div class="cal-cell-head"><span class="cal-day' + redDay + '">' + d.getDate() + '</span>' + badge + '</div>' +
-      '<div class="cal-todos">' + lines + '</div>';
+      '<span class="cal-day' + redDay + '">' + d.getDate() + '</span>' + badge + chips;
     grid.appendChild(cell);
   }
 

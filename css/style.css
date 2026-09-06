@@ -240,12 +240,13 @@ select { cursor: pointer; }
 }
 .cal-cell {
   border-radius: 13px; border: 1px solid rgba(15, 23, 42, .06); background: #fff;
-  padding: 7px 7px 5px; cursor: pointer; display: flex; flex-direction: column;
+  padding: 6px; cursor: pointer;
+  display: flex; flex-wrap: wrap; align-content: flex-start; align-items: center; gap: 4px;
   transition: all .18s; overflow: hidden; min-height: 0;
+  overflow-y: auto; overflow-x: hidden; scrollbar-width: thin;
 }
 .cal-cell:hover { border-color: rgba(59, 130, 246, .45); background: #F5F9FF; box-shadow: 0 8px 18px -10px rgba(37, 99, 235, .45); transform: translateY(-1px); }
-.cal-cell-head { display: flex; align-items: center; justify-content: space-between; gap: 4px; flex-shrink: 0; }
-.cal-day { font-size: 13.5px; font-weight: 600; color: var(--ink-2); font-variant-numeric: tabular-nums; }
+.cal-day { font-size: 13.5px; font-weight: 700; color: var(--ink-2); font-variant-numeric: tabular-nums; line-height: 1.4; margin-right: 1px; }
 /* 周末与法定假日：红字 */
 .cal-day.day-red { color: #DC2626; }
 .cal-cell.other-month { background: rgba(241, 245, 249, .5); }
@@ -257,24 +258,17 @@ select { cursor: pointer; }
 /* 人员筛选命中的格子 */
 .cal-cell.cell-hl { border-color: rgba(59, 130, 246, .55); background: #F0F6FF; box-shadow: inset 0 0 0 1px rgba(147, 197, 253, .7); }
 /* 格内待办：负责人以醒目芯片逐行展示，超出滚动 */
-.cal-todos { flex: 1; min-height: 0; overflow-y: auto; overflow-x: hidden; margin-top: 5px; scrollbar-width: thin; display: flex; flex-wrap: wrap; gap: 4px; align-content: flex-start; }
+/* 人员芯片：横向流式排列 */
 .cal-todo-line {
-  font-size: 13.5px; line-height: 1.7; padding: 0 2px;
-  display: flex; align-items: center; gap: 5px; min-width: 0;
+  font-size: 13px; font-weight: 600; color: #1E40AF;
+  background: rgba(59, 130, 246, .10);
+  line-height: 1.55; padding: 1px 8px;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  max-width: 100%; border-radius: 7px;
 }
-.tl-person { color: #1E40AF; font-weight: 600; flex-shrink: 0; transition: all .15s; }
-.tl-text { color: #475569; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
-.cal-todo-line:hover .tl-text { color: #1D4ED8; }
-.cal-todo-line { transition: transform .18s, box-shadow .18s; }
-.cal-todo-line:hover .tl-text { color: #1D4ED8; }
-.cal-todo-line:hover .tl-person { text-decoration: underline; }
-/* 人员筛选命中/未命中样式 */
-.cal-todo-line.hl { background: rgba(59, 130, 246, .05); }
-.cal-todo-line.hl .tl-person {
-  font-size: 15.5px; color: #2563EB; font-weight: 700;
-  background: rgba(59, 130, 246, .14); padding: 0 6px; border-radius: 5px;
-  text-decoration: underline;
-}
+.cal-todo-line:hover { background: #2563EB; color: #fff; }
+/* 人员筛选命中/未命中：同尺寸实色凸显，不放大不出框 */
+.cal-todo-line.hl { background: var(--grad); color: #fff; box-shadow: 0 3px 8px -3px rgba(59, 99, 246, .6); }
 .cal-todo-line.dim { opacity: .22; }
 /* 人员图例行 */
 .cal-persons { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; padding: 0 0 12px; font-size: 12.5px; }
@@ -305,9 +299,8 @@ select { cursor: pointer; }
 .cal-cell.selected:hover { background: var(--grad); }
 .cal-cell.selected .cal-day { color: #fff; }
 .cal-cell.selected .cal-day.day-red { color: #FFD9D9; }
-.cal-cell.selected .tl-person { color: #fff; }
-.cal-cell.selected .tl-text { color: rgba(255, 255, 255, .85); }
-.cal-cell.selected .cal-todo-line:hover .tl-text { color: #fff; }
+.cal-cell.selected .cal-todo-line { color: #fff; background: rgba(255, 255, 255, .22); }
+.cal-cell.selected .cal-todo-line:hover { background: rgba(255, 255, 255, .36); }
 .cal-cell.selected.cal-match { box-shadow: 0 10px 22px -10px rgba(59, 99, 246, .8), 0 0 0 2px rgba(96, 165, 250, .55); }
 
 /* ---------- 当日待办管理弹窗 ---------- */
@@ -616,7 +609,7 @@ select { cursor: pointer; }
    响应式
    ========================================================= */
 @media (max-width: 1500px) {
-  .calendar-card { min-height: 500px; }
+
 }
 @media (max-width: 1200px) {
   .form-row-3 { grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); }
@@ -696,7 +689,7 @@ select { cursor: pointer; }
   .cal-day { font-size: 12px; }
   .day-badge { width: 14px; height: 14px; font-size: 9.5px; border-radius: 4.5px; }
   .cal-todos { overflow: hidden; margin-top: 2px; }
-  .cal-todo-line { font-size: 10.5px; line-height: 1.55; padding: 0 3px; }
+  .cal-todo-line { font-size: 11.5px; line-height: 1.5; padding: 1px 5px; border-radius: 6px; }
   /* 小屏每格最多显示 2 行 */
   .cal-todo-line:nth-child(n+3) { display: none; }
 
