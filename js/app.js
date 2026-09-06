@@ -7,7 +7,7 @@
      3. local  - 浏览器本地模式：localStorage（兜底方案，始终作为镜像缓存）
    ========================================================= */
 
-const APP_VERSION = '1.8.0';
+const APP_VERSION = '1.8.1';
 
 /* =========================================================
    工具函数
@@ -1476,7 +1476,7 @@ function bindLogin() {
       screen.classList.add('login-out');   // 淡出过渡
       setTimeout(() => screen.remove(), 350);
       initApp();
-      toast('欢迎回来', 'success');
+      toast('欢迎回来', 'info');   // 普通蓝色轻提示
     } else {
       $('#login-error').textContent = '登录码不正确，请重新输入';
       card.classList.remove('shake');
