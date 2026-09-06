@@ -1,29 +1,5 @@
 [
   {
-    "id": "mto8jfp3-4z6ej3",
-    "category": "已落地",
-    "name": "城市网格化巡查服务",
-    "unit": "城市治理事业部",
-    "service": "全市建成区网格化航拍巡查，覆盖违建、市容、环卫等问题采集",
-    "region": "全市 21 个街道",
-    "freq": "每周两次",
-    "budget": 320,
-    "follow": "",
-    "remark": "已签订年度服务合同"
-  },
-  {
-    "id": "mto8jfp3-xx4pb4",
-    "category": "已落地",
-    "name": "水域生态监测服务",
-    "unit": "生态环境事业部",
-    "service": "重点河涌水质航拍监测、排污口排查与蓝藻识别",
-    "region": "中心城区及重点流域",
-    "freq": "每月一次",
-    "budget": 280,
-    "follow": "",
-    "remark": "含月度数据报告"
-  },
-  {
     "id": "mto8jfp3-b6gg6m",
     "category": "潜在合作",
     "name": "应急消防空中侦察支持",
@@ -46,6 +22,30 @@
     "budget": 150,
     "follow": "初步接触",
     "remark": "已完成现场踏勘"
+  },
+  {
+    "id": "mto8jfp3-4z6ej3",
+    "category": "已落地",
+    "name": "城市网格化巡查服务",
+    "unit": "城市治理事业部",
+    "service": "全市建成区网格化航拍巡查，覆盖违建、市容、环卫等问题采集",
+    "region": "全市 21 个街道",
+    "freq": "每周两次",
+    "budget": 320,
+    "follow": "",
+    "remark": "已签订年度服务合同"
+  },
+  {
+    "id": "mto8jfp3-xx4pb4",
+    "category": "已落地",
+    "name": "水域生态监测服务",
+    "unit": "生态环境事业部",
+    "service": "重点河涌水质航拍监测、排污口排查与蓝藻识别",
+    "region": "中心城区及重点流域",
+    "freq": "每月一次",
+    "budget": 280,
+    "follow": "",
+    "remark": "含月度数据报告"
   },
   {
     "id": "mto8jfp3-wcp53c",

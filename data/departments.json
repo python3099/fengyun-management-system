@@ -1,1 +1,66 @@
-[]
+[
+  {
+    "id": "legacy-1",
+    "name": "交通局",
+    "service": "道路桥梁巡查",
+    "contracts": [
+      {
+        "id": "mtp4x9u5-tmyj4h",
+        "name": "国省道巡查服务合同",
+        "content": "国省道沿线航拍巡查与病害识别",
+        "amount": 200,
+        "patrol": 600,
+        "problems": 120,
+        "cats": [
+          {
+            "name": "道路病害类",
+            "count": 80
+          },
+          {
+            "name": "设施损坏类",
+            "count": 40
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "mtp4y6hi-3e891y",
+    "name": "住建局",
+    "service": "城市网格化巡查与违建治理",
+    "contracts": [
+      {
+        "id": "mtp4y6hh-lbvz7d",
+        "name": "城市网格化巡查服务合同",
+        "content": "全市建成区网格化航拍巡查",
+        "amount": 180,
+        "patrol": 1056,
+        "problems": 268,
+        "cats": [
+          {
+            "name": "市容秩序类",
+            "count": 142
+          },
+          {
+            "name": "环境卫生类",
+            "count": 126
+          }
+        ]
+      },
+      {
+        "id": "mtp4y6hi-v9osv5",
+        "name": "违建排查专项合同",
+        "content": "重点区域违建航拍比对",
+        "amount": 220,
+        "patrol": 800,
+        "problems": 155,
+        "cats": [
+          {
+            "name": "违章建筑类",
+            "count": 66
+          }
+        ]
+      }
+    ]
+  }
+]

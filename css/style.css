@@ -1,6 +1,6 @@
 /* =========================================================
    广东丰云智能科技有限公司管理系统
-   全局样式（科技蓝主题 #2563EB + 深色侧边栏）
+   全局样式（科技蓝主题 #2563EB + 深色侧边栏）· v1.2.0
    ========================================================= */
 * { margin: 0; padding: 0; box-sizing: border-box; }
 html, body { height: 100%; }
@@ -29,7 +29,6 @@ button { font-family: inherit; }
   width: 38px; height: 38px; border-radius: 10px; flex-shrink: 0;
   background: linear-gradient(135deg, #3B82F6, #1D4ED8);
   display: flex; align-items: center; justify-content: center;
-  font-weight: 700; font-size: 13px; letter-spacing: 1px;
   box-shadow: 0 2px 8px rgba(37, 99, 235, .45);
 }
 .sys-title { font-size: 17px; font-weight: 600; letter-spacing: .5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
@@ -141,12 +140,22 @@ select { cursor: pointer; }
 .empty-state::before { content: "📭"; display: block; font-size: 32px; margin-bottom: 8px; opacity: .6; }
 
 /* =========================================================
-   模块一：日常待办（日历）
+   模块一：日常待办（日历 + 节假日 + 格内待办）
    ========================================================= */
 .calendar-card { padding: 18px 20px 20px; margin-bottom: 18px; }
 .cal-toolbar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; flex-wrap: wrap; gap: 10px; }
 .cal-title { font-size: 17px; font-weight: 700; color: #0F172A; font-variant-numeric: tabular-nums; }
 .cal-nav { display: flex; gap: 8px; }
+/* 图例 */
+.cal-legend { display: flex; align-items: center; gap: 8px; color: #64748B; font-size: 12px; }
+.lg-red { color: #DC2626; }
+.day-badge {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 17px; height: 17px; border-radius: 5px; font-size: 11px; font-weight: 700; line-height: 1;
+}
+.badge-rest { background: #DC2626; color: #fff; }
+.badge-work { background: #2563EB; color: #fff; }
+
 .cal-week-header {
   display: grid; grid-template-columns: repeat(7, 1fr); text-align: center;
   font-size: 12.5px; color: #64748B; font-weight: 600;
@@ -154,26 +163,37 @@ select { cursor: pointer; }
 }
 .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; }
 .cal-cell {
-  min-height: 64px; border-radius: 10px; border: 1px solid #EEF2F7; background: #fff;
-  padding: 8px 8px 6px; cursor: pointer; display: flex; flex-direction: column;
-  align-items: flex-start; justify-content: space-between; transition: all .15s;
+  height: 96px; border-radius: 10px; border: 1px solid #EEF2F7; background: #fff;
+  padding: 6px 6px 4px; cursor: pointer; display: flex; flex-direction: column;
+  transition: all .15s; overflow: hidden;
 }
-.cal-cell:hover { border-color: #93C5FD; background: #F0F7FF; transform: translateY(-1px); }
-.cal-day { font-size: 14px; font-weight: 600; color: #334155; font-variant-numeric: tabular-nums; }
+.cal-cell:hover { border-color: #93C5FD; background: #F0F7FF; }
+.cal-cell-head { display: flex; align-items: center; justify-content: space-between; gap: 4px; flex-shrink: 0; }
+.cal-day { font-size: 13.5px; font-weight: 600; color: #334155; font-variant-numeric: tabular-nums; }
+/* 周末与法定假日：红字 */
+.cal-day.day-red { color: #DC2626; }
 .cal-cell.other-month { background: #FAFBFC; }
 .cal-cell.other-month .cal-day { color: #CBD5E1; }
-.cal-cell.today { border-color: #93C5FD; }
-.cal-cell.today .cal-day { color: #2563EB; }
-.cal-dot {
-  width: 7px; height: 7px; border-radius: 50%; background: #2563EB;
-  align-self: center; box-shadow: 0 0 0 3px rgba(37, 99, 235, .15);
+.cal-cell.other-month .cal-day.day-red { color: #F3B9B9; }
+/* 法定假日整格淡红底 */
+.cal-cell.cal-hol { background: #FFF6F6; border-color: #FDE4E4; }
+.cal-cell.cal-hol:hover { background: #FFEEEE; border-color: #FBC5C5; }
+/* 格内待办：逐行显示负责人，超出滚动 */
+.cal-todos { flex: 1; min-height: 0; overflow-y: auto; margin-top: 4px; scrollbar-width: thin; }
+.cal-todo-line {
+  font-size: 11.5px; color: #475569; line-height: 1.7; padding: 0 4px;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis; border-radius: 4px;
 }
+.cal-todo-line:hover { background: #E0EAFF; color: #1D4ED8; }
 .cal-cell.selected {
   background: linear-gradient(135deg, #2563EB, #3B82F6); border-color: transparent;
   box-shadow: 0 4px 10px rgba(37, 99, 235, .35);
 }
+.cal-cell.selected:hover { background: linear-gradient(135deg, #2563EB, #3B82F6); }
 .cal-cell.selected .cal-day { color: #fff; }
-.cal-cell.selected .cal-dot { background: #fff; box-shadow: 0 0 0 3px rgba(255,255,255,.25); }
+.cal-cell.selected .cal-day.day-red { color: #FFD9D9; }
+.cal-cell.selected .cal-todo-line { color: rgba(255,255,255,.92); }
+.cal-cell.selected .cal-todo-line:hover { background: rgba(255,255,255,.18); color: #fff; }
 
 /* 待办面板 */
 .todo-panel { padding: 20px; }
@@ -198,7 +218,7 @@ select { cursor: pointer; }
 .todo-ops { display: flex; gap: 6px; flex-shrink: 0; }
 
 /* =========================================================
-   模块二：运营情况
+   模块二：运营情况（部门 + 多合同）
    ========================================================= */
 .stat-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; margin-bottom: 20px; }
 .stat-card {
@@ -231,13 +251,36 @@ select { cursor: pointer; }
 .dept-stats b { display: block; font-size: 20px; color: #0F172A; font-weight: 700; font-variant-numeric: tabular-nums; }
 .dept-stats span { font-size: 12px; color: #64748B; }
 .dept-sec-label { font-size: 12.5px; color: #94A3B8; margin: 12px 0 8px; font-weight: 600; }
+
+/* 部门卡片内的合同列表 */
+.contract-item {
+  border: 1px solid #EEF2F7; border-radius: 10px; padding: 10px 12px; margin-bottom: 8px;
+  background: #fff; transition: border-color .15s;
+}
+.contract-item:hover { border-color: #BFDBFE; }
+.ci-head { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
+.ci-name { font-weight: 600; color: #0F172A; font-size: 13.5px; word-break: break-all; }
+.ci-amount { color: #2563EB; font-weight: 700; font-size: 13.5px; white-space: nowrap; font-variant-numeric: tabular-nums; }
+.ci-content { color: #64748B; font-size: 12.5px; margin-top: 4px; line-height: 1.6; word-break: break-all; }
+.ci-meta { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; align-items: center; }
+.ci-meta .cat-chip { font-size: 11.5px; }
+
 .chip-row { display: flex; flex-wrap: wrap; gap: 6px; }
 .cat-chip { background: #F1F5F9; color: #475569; border-radius: 6px; padding: 3px 9px; font-size: 12px; }
 .cat-chip b { color: #2563EB; font-weight: 700; margin-left: 3px; }
-.proj-chip { background: #EFF6FF; color: #1D4ED8; border: 1px dashed #BFDBFE; border-radius: 6px; padding: 3px 9px; font-size: 12px; }
+
+/* 部门弹窗中的合同编辑块 */
+.contract-box {
+  border: 1px solid #E2E8F0; border-radius: 12px; padding: 12px 14px 6px;
+  margin-bottom: 12px; background: #FAFBFC;
+}
+.cb-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+.cb-title { font-weight: 700; color: #1D4ED8; font-size: 13.5px; }
+.cb-label { display: block; font-size: 12.5px; font-weight: 600; color: #475569; margin-bottom: 4px; }
+.cb-cats { border-top: 1px dashed #E2E8F0; padding-top: 10px; margin-top: 4px; }
 
 /* =========================================================
-   模块三：进度卡点（表格）
+   可拖拽表格（进度卡点 / 来年统采）
    ========================================================= */
 .table-card { overflow: hidden; }
 .table-wrap { overflow-x: auto; }
@@ -256,8 +299,15 @@ select { cursor: pointer; }
 .td-ops { white-space: nowrap; }
 .td-ops .btn + .btn { margin-left: 6px; }
 
+/* 拖拽相关 */
+.drag-table .th-drag { width: 30px; }
+.drag-table td.drag-handle { color: #C0C9D6; text-align: center; cursor: grab; user-select: none; font-size: 15px; letter-spacing: -1px; }
+.drag-table td.drag-handle:hover { color: #2563EB; }
+.drag-table tr.dragging { opacity: .45; background: #EFF6FF !important; }
+.drag-table tr.drag-over td { border-top: 2px solid #2563EB; background: #F0F7FF; }
+
 /* =========================================================
-   模块四：来年统采进展
+   模块四：来年统采（表格）
    ========================================================= */
 .proc-tabs { display: flex; gap: 10px; margin-bottom: 16px; flex-wrap: wrap; }
 .proc-tab {
@@ -275,26 +325,10 @@ select { cursor: pointer; }
 .proc-tab.tab-danger .tab-count { background: #FEE2E2; color: #B91C1C; }
 .proc-tab.tab-danger.active .tab-count { background: rgba(255,255,255,.25); color: #fff; }
 
-.proc-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(350px, 1fr)); gap: 16px; }
-.proc-card { padding: 18px 20px; border-left: 4px solid #2563EB; transition: transform .2s, box-shadow .2s; }
-.proc-card:hover { transform: translateY(-3px); box-shadow: 0 8px 24px rgba(15,23,42,.1); }
-/* 未对接清单：红色左侧色条 + 浅红底高亮，提醒重点关注 */
-.proc-card.proc-danger { border-left-color: #EF4444; background: linear-gradient(180deg, #FFFBFB, #FFFFFF 40%); }
-.proc-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; }
-.proc-name { font-size: 16px; font-weight: 700; color: #0F172A; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
-.proc-unit { color: #64748B; font-size: 12.5px; margin-top: 4px; }
-.proc-desc {
-  background: #F8FAFC; border-radius: 8px; padding: 8px 10px; color: #475569;
-  font-size: 13px; margin: 12px 0; line-height: 1.6; word-break: break-all;
-}
-.proc-fields { display: grid; grid-template-columns: 1fr 1fr; gap: 8px 12px; }
-.proc-field {
-  display: flex; justify-content: space-between; align-items: center; gap: 8px;
-  font-size: 13px; background: #fff; border: 1px solid #F1F5F9; border-radius: 8px; padding: 7px 10px;
-}
-.proc-field > span { color: #94A3B8; flex-shrink: 0; }
-.proc-field > b { color: #1E293B; font-weight: 600; text-align: right; word-break: break-all; }
-.proc-remark { color: #94A3B8; font-size: 12.5px; margin-top: 12px; border-top: 1px dashed #E2E8F0; padding-top: 10px; word-break: break-all; }
+/* 未对接清单：整行淡红底 + 左侧红色条，重点关注 */
+.proc-table tbody tr.row-danger td { background: #FFF7F7; }
+.proc-table tbody tr.row-danger td:first-child { border-left: 4px solid #EF4444; }
+.proc-table tbody tr.row-danger:hover td { background: #FFEEEE; }
 
 /* =========================================================
    数据管理（存储模式 / 备份导入导出）
@@ -315,7 +349,7 @@ select { cursor: pointer; }
 }
 .modal-overlay.show { opacity: 1; visibility: visible; }
 .modal {
-  background: #fff; border-radius: 16px; width: 100%; max-width: 600px; max-height: 88vh;
+  background: #fff; border-radius: 16px; width: 100%; max-width: 620px; max-height: 88vh;
   display: flex; flex-direction: column;
   transform: translateY(16px) scale(.98); transition: transform .22s;
   box-shadow: 0 20px 60px rgba(15, 23, 42, .3);
@@ -354,7 +388,7 @@ select { cursor: pointer; }
    响应式（1366×768 及以上优先保证，窄屏自动降级）
    ========================================================= */
 @media (max-width: 1500px) {
-  .cal-cell { min-height: 54px; }
+  .cal-cell { height: 86px; }
 }
 @media (max-width: 1200px) {
   .todo-form { grid-template-columns: 1fr 1fr; }
@@ -368,11 +402,12 @@ select { cursor: pointer; }
   .sidebar-foot { display: none; }
   .main { margin-left: 64px; }
   #datetime { display: none; }
+  .cal-legend { display: none; }
 }
 @media (max-width: 768px) {
   .sys-title { font-size: 14px; }
-  .dept-grid, .proc-grid { grid-template-columns: 1fr; }
-  .cal-cell { min-height: 44px; padding: 4px; }
+  .dept-grid { grid-template-columns: 1fr; }
+  .cal-cell { height: 64px; padding: 3px; }
+  .cal-todo-line { display: none; }
   .form-row-2 { grid-template-columns: 1fr; }
-  .proc-fields { grid-template-columns: 1fr; }
 }

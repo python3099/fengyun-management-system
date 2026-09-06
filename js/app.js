@@ -1,13 +1,13 @@
 'use strict';
 /* =========================================================
-   广东丰云智能科技有限公司管理系统 - 应用脚本
+   广东丰云智能科技有限公司管理系统 - 应用脚本 v1.2.0
    数据存储适配层支持三种模式（自动检测，可手动绑定）：
      1. server - 服务器共享模式：经 server.js 的 /api/data 读写服务器 data/*.json
      2. file   - 目录绑定模式  ：通过 File System Access API 写入本地项目 data/ 目录
      3. local  - 浏览器本地模式：localStorage（兜底方案，始终作为镜像缓存）
    ========================================================= */
 
-const APP_VERSION = '1.1.0';
+const APP_VERSION = '1.2.0';
 
 /* =========================================================
    工具函数
@@ -22,6 +22,36 @@ const fmtDateTime = d => fmtDate(d) + ' ' + pad(d.getHours()) + ':' + pad(d.getM
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const formatNum = n => { const v = Number(n); return Number.isFinite(v) ? v.toLocaleString('zh-CN', { maximumFractionDigits: 2 }) : '0'; };
 const toNum = (v, def = 0) => { const n = parseFloat(v); return (Number.isFinite(n) && n >= 0) ? n : def; };
+
+/* =========================================================
+   法定节假日数据（依据国务院办公厅通知）
+   type: 'rest' = 放假（显示"休"、淡红底），'work' = 调休上班（显示"班"）
+   2027 年及以后的安排待国务院发布后，按同样格式在下方补充即可
+   ========================================================= */
+const HOLIDAYS = (() => {
+  const h = {};
+  const mark = (name, type, dates) => dates.forEach(d => { h[d] = { name, type }; });
+  const range = (y, m1, d1, m2, d2) => {   // 生成 y 年 m1月d1日 ~ m2月d2日 的日期数组
+    const out = [];
+    const cur = new Date(y, m1 - 1, d1);
+    const end = new Date(y, m2 - 1, d2);
+    while (cur <= end) { out.push(fmtDate(cur)); cur.setDate(cur.getDate() + 1); }
+    return out;
+  };
+  /* 2026 年（国办发明电〔2025〕发布） */
+  mark('元旦', 'rest', range(2026, 1, 1, 1, 3));
+  mark('元旦', 'work', ['2026-01-04']);
+  mark('春节', 'rest', range(2026, 2, 15, 2, 23));
+  mark('春节', 'work', ['2026-02-14', '2026-02-28']);
+  mark('清明节', 'rest', range(2026, 4, 4, 4, 6));
+  mark('劳动节', 'rest', range(2026, 5, 1, 5, 5));
+  mark('劳动节', 'work', ['2026-05-09']);
+  mark('端午节', 'rest', range(2026, 6, 19, 6, 21));
+  mark('中秋节', 'rest', range(2026, 9, 25, 9, 27));
+  mark('国庆节', 'rest', range(2026, 10, 1, 10, 7));
+  mark('国庆节', 'work', ['2026-09-20', '2026-10-10']);
+  return h;
+})();
 
 /* =========================================================
    数据存储适配层
@@ -70,6 +100,59 @@ const LS = {
   set(key, val) { try { localStorage.setItem(key, JSON.stringify(val)); } catch (e) { /* 存储满时静默，远程模式仍可工作 */ } }
 };
 
+/* ========== 部门数据结构与迁移（v1.2 起部门包含多个合同） ========== */
+function normCats(cats) {
+  if (!Array.isArray(cats)) return [];
+  return cats.map(c => ({ name: String(c && c.name || '').trim(), count: Math.round(toNum(c && c.count)) }))
+             .filter(c => c.name);
+}
+/* 旧版部门字段（单合同 contract/patrol/problems/cats + projects）迁移为合同列表 */
+function migrateDept(d) {
+  const out = {
+    id: d.id || uid(),
+    name: String(d.name || '').trim() || '未命名部门',
+    service: String(d.service || ''),
+    contracts: []
+  };
+  if (Array.isArray(d.contracts)) {
+    out.contracts = d.contracts.map(c => ({
+      id: (c && c.id) || uid(),
+      name: String(c && c.name || '').trim() || '未命名合同',
+      content: String(c && c.content || ''),
+      amount: toNum(c && c.amount),
+      patrol: Math.round(toNum(c && c.patrol)),
+      problems: Math.round(toNum(c && c.problems)),
+      cats: normCats(c && c.cats)
+    }));
+  } else if (d.contract != null || d.patrol != null || d.problems != null || Array.isArray(d.cats)) {
+    out.contracts = [{
+      id: uid(),
+      name: (Array.isArray(d.projects) && d.projects[0] && String(d.projects[0])) || '原合同',
+      content: '',
+      amount: toNum(d.contract),
+      patrol: Math.round(toNum(d.patrol)),
+      problems: Math.round(toNum(d.problems)),
+      cats: normCats(d.cats)
+    }];
+  }
+  return out;
+}
+/* 部门所有合同聚合（看板展示用） */
+function deptTotals(d) {
+  const t = { amount: 0, patrol: 0, problems: 0, count: 0, cats: [] };
+  (d.contracts || []).forEach(c => {
+    t.amount += toNum(c.amount);
+    t.patrol += toNum(c.patrol);
+    t.problems += toNum(c.problems);
+    t.count += 1;
+    (c.cats || []).forEach(cat => {
+      const hit = t.cats.find(x => x.name === cat.name);
+      if (hit) hit.count += cat.count; else t.cats.push({ name: cat.name, count: cat.count });
+    });
+  });
+  return t;
+}
+
 /* ========== 默认示例数据（仅对应存储中无数据时使用，可编辑/删除） ========== */
 function defaultTodos() {
   const today = fmtDate(new Date());
@@ -83,47 +166,41 @@ function defaultTodos() {
 function defaultDepartments() {
   return [
     {
-      id: uid(), name: '城市治理事业部', service: '城市网格化巡查',
-      contract: 320, patrol: 1856, problems: 423,
-      cats: [
-        { name: '环境污染类', count: 156 },
-        { name: '违章建筑类', count: 132 },
-        { name: '市容秩序类', count: 135 }
-      ],
-      projects: ['XX区城市网格巡查项目', '中心城区违建排查项目', '重点区域市容巡飞项目']
+      id: uid(), name: '住建局', service: '城市网格化巡查与违建治理',
+      contracts: [
+        { id: uid(), name: '城市网格化巡查服务合同', content: '全市建成区网格化航拍巡查，覆盖市容秩序、环境卫生等问题采集', amount: 180, patrol: 1056, problems: 268, cats: [{ name: '市容秩序类', count: 142 }, { name: '环境卫生类', count: 126 }] },
+        { id: uid(), name: '违建排查专项服务合同', content: '重点区域违建航拍比对与变化识别', amount: 140, patrol: 800, problems: 155, cats: [{ name: '违章建筑类', count: 155 }] }
+      ]
     },
     {
-      id: uid(), name: '生态环境事业部', service: '水域生态监测',
-      contract: 280, patrol: 1230, problems: 267,
-      cats: [
-        { name: '水体污染类', count: 98 },
-        { name: '非法排污类', count: 87 },
-        { name: '生态破坏类', count: 82 }
-      ],
-      projects: ['XX河涌水质航拍监测项目', '饮用水源地巡查项目']
+      id: uid(), name: '水务局', service: '水域生态监测',
+      contracts: [
+        { id: uid(), name: '水域生态监测服务合同', content: '重点河涌水质航拍监测、排污口排查与蓝藻识别', amount: 280, patrol: 1230, problems: 267, cats: [{ name: '水体污染类', count: 98 }, { name: '非法排污类', count: 87 }, { name: '生态破坏类', count: 82 }] }
+      ]
     }
   ];
 }
 function defaultBlockers() {
   return [
-    { id: uid(), title: '空域审批流程待明确', department: '城市治理事业部', progress: '已与空管部门初步沟通，等待正式批复意见', person: '李四', help: '需协调局方加快审批进度', status: '进行中', updateTime: '2026-09-03' },
-    { id: uid(), title: '巡飞电池组采购到货延迟', department: '生态环境事业部', progress: '供应商已发货，预计 9 月 10 日到货', person: '王五', help: '需采购部跟进物流并协调备机', status: '待推进', updateTime: '2026-09-01' },
-    { id: uid(), title: '河涌监测数据接口联调', department: '生态环境事业部', progress: '接口已打通，历史数据校验通过，已交付使用', person: '赵六', help: '', status: '已解决', updateTime: '2026-08-28' }
+    { id: uid(), title: '2027年度巡飞航线规划', department: '住建局', progress: '待收集各街道巡查需求后统一规划', person: '张三', help: '需各街道提供重点区域清单', status: '未开始', updateTime: '2026-09-04' },
+    { id: uid(), title: '空域审批流程待明确', department: '住建局', progress: '已与空管部门初步沟通，等待正式批复意见', person: '李四', help: '需协调局方加快审批进度', status: '进行中', updateTime: '2026-09-03' },
+    { id: uid(), title: '巡飞电池组采购到货延迟', department: '水务局', progress: '供应商已发货，预计 9 月 10 日到货', person: '王五', help: '需采购部跟进物流并协调备机', status: '待推进', updateTime: '2026-09-01' },
+    { id: uid(), title: '河涌监测数据接口联调', department: '水务局', progress: '接口已打通，历史数据校验通过，已交付使用', person: '赵六', help: '', status: '已解决', updateTime: '2026-08-28' }
   ];
 }
 function defaultProcurement() {
   return [
-    { id: uid(), category: '已落地', name: '城市网格化巡查服务', unit: '城市治理事业部', service: '全市建成区网格化航拍巡查，覆盖违建、市容、环卫等问题采集', region: '全市 21 个街道', freq: '每周两次', budget: 320, follow: '', remark: '已签订年度服务合同' },
-    { id: uid(), category: '已落地', name: '水域生态监测服务', unit: '生态环境事业部', service: '重点河涌水质航拍监测、排污口排查与蓝藻识别', region: '中心城区及重点流域', freq: '每月一次', budget: 280, follow: '', remark: '含月度数据报告' },
-    { id: uid(), category: '潜在合作', name: '应急消防空中侦察支持', unit: '应急管理事业部', service: '火情侦察、灾害现场航拍建模、应急演练空中保障', region: '粤东片区', freq: '季度巡检', budget: null, follow: '方案编制中', remark: '待应急局立项评审' },
-    { id: uid(), category: '潜在合作', name: '高标准农田航拍测绘', unit: '农业农村事业部', service: '农田地块航拍建模、作物长势监测与产量预估', region: '2 个试点县区', freq: '每月一次', budget: 150, follow: '初步接触', remark: '已完成现场踏勘' },
+    { id: uid(), category: '已落地', name: '城市网格化巡查服务', unit: '住建局', service: '全市建成区网格化航拍巡查，覆盖违建、市容、环卫等问题采集', region: '全市 21 个街道', freq: '每周两次', budget: 320, follow: '', remark: '已签订年度服务合同' },
+    { id: uid(), category: '已落地', name: '水域生态监测服务', unit: '水务局', service: '重点河涌水质航拍监测、排污口排查与蓝藻识别', region: '中心城区及重点流域', freq: '每月一次', budget: 280, follow: '', remark: '含月度数据报告' },
+    { id: uid(), category: '潜在合作', name: '应急消防空中侦察支持', unit: '应急管理局', service: '火情侦察、灾害现场航拍建模、应急演练空中保障', region: '粤东片区', freq: '季度巡检', budget: null, follow: '方案编制中', remark: '待应急局立项评审' },
+    { id: uid(), category: '潜在合作', name: '高标准农田航拍测绘', unit: '农业农村局', service: '农田地块航拍建模、作物长势监测与产量预估', region: '2 个试点县区', freq: '每月一次', budget: 150, follow: '初步接触', remark: '已完成现场踏勘' },
     { id: uid(), category: '未对接', name: '森林防火巡查需求', unit: '市林业局', service: '重点林区防火巡飞、烟点识别与热成像监测', region: '北部山区林场', freq: '每周一次', budget: null, follow: '待决策', remark: '需先对接林政科明确巡飞范围' },
-    { id: uid(), category: '未对接', name: '城市违建智能识别试点', unit: '市城市综合执法局', service: '违章建筑航拍识别与变化对比分析', region: '主城区 3 个街道', freq: '每月一次', budget: null, follow: '初步接触', remark: '拟结合现有网格巡查数据开展试点' }
+    { id: uid(), category: '未对接', name: '城市违建智能识别试点', unit: '市城管局', service: '违章建筑航拍识别与变化对比分析', region: '主城区 3 个街道', freq: '每月一次', budget: null, follow: '初步接触', remark: '拟结合现有网格巡查数据开展试点' }
   ];
 }
 const DEFAULT_FACTORIES = { todos: defaultTodos, departments: defaultDepartments, blockers: defaultBlockers, procurement: defaultProcurement };
 
-/* 校验远程数据结构，非法则返回 null（保留本地数据） */
+/* 校验远程数据结构，非法则返回 null（保留本地数据）；部门数据顺带执行合同模型迁移 */
 function validateModuleData(name, v) {
   if (v == null) return null;
   if (name === 'todos') {
@@ -131,6 +208,7 @@ function validateModuleData(name, v) {
     return v;
   }
   if (!Array.isArray(v)) return null;
+  if (name === 'departments') return v.map(migrateDept);
   return v;
 }
 
@@ -512,7 +590,8 @@ function shiftMonth(delta) {
   renderCalendar();
 }
 
-/* 渲染月视图日历（7 列 × 6 行，周一为每周第一天） */
+/* 渲染月视图日历：周末/法定假日红字，假日淡红底+"休"，调休日"班"；
+   格内逐行显示当日待办负责人，行数过多时格子内滚动 */
 function renderCalendar() {
   $('#cal-title').textContent = calY + '年' + (calM + 1) + '月';
   const grid = $('#cal-grid');
@@ -523,13 +602,32 @@ function renderCalendar() {
   for (let i = 0; i < 42; i++) {
     const d = new Date(startDate.getFullYear(), startDate.getMonth(), startDate.getDate() + i);
     const key = fmtDate(d);
-    const hasTodo = (todos[key] || []).length > 0;
+    const hol = HOLIDAYS[key];                       // 法定节假日/调休
+    const isWeekend = d.getDay() === 0 || d.getDay() === 6;
+    const isRest = !!(hol && hol.type === 'rest');
+    const isWork = !!(hol && hol.type === 'work');
+    const dayList = todos[key] || [];
+
     const cell = document.createElement('div');
     cell.className = 'cal-cell';
     if (d.getMonth() !== calM) cell.classList.add('other-month');
+    if (isRest) cell.classList.add('cal-hol');
     if (key === todayStr) cell.classList.add('today');
     if (key === selectedDate) cell.classList.add('selected');
-    cell.innerHTML = '<span class="cal-day">' + d.getDate() + '</span>' + (hasTodo ? '<span class="cal-dot" title="当日有待办"></span>' : '');
+    cell.title = hol ? hol.name + (isRest ? '（放假）' : '（调休上班）') : '';
+
+    const redDay = (isWeekend || isRest) ? ' day-red' : '';
+    const badge = isRest ? '<span class="day-badge badge-rest" title="' + esc(hol.name) + '">休</span>'
+                : isWork ? '<span class="day-badge badge-work" title="' + esc(hol.name) + '调休，这天要上班">班</span>'
+                : '';
+    const lines = dayList.map(t =>
+      '<div class="cal-todo-line" title="' + esc(t.person) + '：' + esc(t.content) + '">' + esc(t.person) + '</div>'
+    ).join('');
+
+    cell.innerHTML =
+      '<div class="cal-cell-head"><span class="cal-day' + redDay + '">' + d.getDate() + '</span>' + badge + '</div>' +
+      '<div class="cal-todos">' + lines + '</div>';
+
     cell.addEventListener('click', () => {
       selectedDate = key;
       if (d.getMonth() !== calM) { calY = d.getFullYear(); calM = d.getMonth(); }  // 点击相邻月份日期时自动切换月份
@@ -608,14 +706,15 @@ function saveTodoEdit() {
 }
 
 /* =========================================================
-   模块二：运营情况
+   模块二：运营情况（部门 + 多合同，按合同总额排序）
    ========================================================= */
 let editingDeptId = null;
-const BASE_DEPTS = ['城市治理事业部', '生态环境事业部', '应急管理事业部', '农业农村事业部', '智慧交通事业部', '低空经济事业部'];
+/* 部门名称预设建议（可自由填写任意名称，下拉仅为快捷输入） */
+const BASE_DEPTS = ['住建局', '交通局', '水务局', '城管局', '应急管理局', '农业农村局'];
 
 function bindOpsEvents() {
   $('#btn-add-dept').addEventListener('click', () => openDeptModal(null));
-  $('#f-dept-addcat').addEventListener('click', () => addCatRow());
+  $('#f-dept-addcontract').addEventListener('click', () => { addContractBox(); renumberContractBoxes(); });
   $('#f-dept-save').addEventListener('click', saveDept);
 
   $('#dept-grid').addEventListener('click', e => {
@@ -625,7 +724,7 @@ function bindOpsEvents() {
     if (delBtn) {
       const d = depts.find(x => x.id === delBtn.dataset.delDept);
       if (!d) return;
-      confirmDialog('确定要删除「' + d.name + '」的全部数据吗？相关指标将同步从汇总中移除。', () => {
+      confirmDialog('确定要删除「' + d.name + '」的全部数据（含 ' + (d.contracts || []).length + ' 份合同）吗？相关指标将同步从汇总中移除。', () => {
         depts = depts.filter(x => x.id !== d.id);
         saveDepts(); renderOps(); refreshDeptOptions();
         toast('部门数据已删除');
@@ -634,21 +733,37 @@ function bindOpsEvents() {
   });
 }
 
-/* 汇总指标 + 部门看板（数据变动后自动重新计算） */
+/* 汇总指标 + 部门看板（默认按合同总额降序，数据变动后自动重新计算） */
 function renderOps() {
-  const sum = fn => depts.reduce((s, d) => s + (Number(fn(d)) || 0), 0);
-  $('#stat-contract').textContent = formatNum(sum(d => d.contract));
-  $('#stat-patrol').textContent   = formatNum(sum(d => d.patrol));
-  $('#stat-problem').textContent  = formatNum(sum(d => d.problems));
-  $('#stat-project').textContent  = formatNum(sum(d => (d.projects || []).length));
-  $('#dept-grid').innerHTML = depts.length
-    ? depts.map(deptCardHTML).join('')
+  const sumAmount = depts.reduce((s, d) => s + deptTotals(d).amount, 0);
+  const sumPatrol = depts.reduce((s, d) => s + deptTotals(d).patrol, 0);
+  const sumProblems = depts.reduce((s, d) => s + deptTotals(d).problems, 0);
+  const sumContracts = depts.reduce((s, d) => s + deptTotals(d).count, 0);
+  $('#stat-contract').textContent = formatNum(sumAmount);
+  $('#stat-patrol').textContent   = formatNum(sumPatrol);
+  $('#stat-problem').textContent  = formatNum(sumProblems);
+  $('#stat-project').textContent  = formatNum(sumContracts);
+  const sorted = [...depts].sort((a, b) => deptTotals(b).amount - deptTotals(a).amount);
+  $('#dept-grid').innerHTML = sorted.length
+    ? sorted.map(deptCardHTML).join('')
     : '<div class="empty-state" style="grid-column:1/-1">暂无部门数据，点击右上角「添加部门数据」开始录入</div>';
 }
 
 function deptCardHTML(d) {
-  const cats = (d.cats || []).map(c => '<span class="cat-chip">' + esc(c.name) + '<b>' + formatNum(c.count) + '</b></span>').join('');
-  const projs = (d.projects || []).map(p => '<span class="proj-chip">' + esc(p) + '</span>').join('');
+  const t = deptTotals(d);
+  const contractItems = (d.contracts || []).map(c => {
+    const cats = (c.cats || []).map(cat => '<span class="cat-chip">' + esc(cat.name) + '<b>' + formatNum(cat.count) + '</b></span>').join('');
+    return '<div class="contract-item">' +
+      '<div class="ci-head"><span class="ci-name">' + esc(c.name) + '</span><span class="ci-amount">' + formatNum(c.amount) + ' 万元</span></div>' +
+      (c.content ? '<div class="ci-content">' + esc(c.content) + '</div>' : '') +
+      '<div class="ci-meta">' +
+        '<span class="cat-chip">巡飞<b>' + formatNum(c.patrol) + '</b></span>' +
+        '<span class="cat-chip">问题<b>' + formatNum(c.problems) + '</b></span>' +
+        cats +
+      '</div>' +
+    '</div>';
+  }).join('');
+  const catChips = t.cats.map(cat => '<span class="cat-chip">' + esc(cat.name) + '<b>' + formatNum(cat.count) + '</b></span>').join('');
   return '<div class="card dept-card">' +
     '<div class="dept-head">' +
       '<div class="dept-name">' + esc(d.name) + '</div>' +
@@ -659,23 +774,20 @@ function deptCardHTML(d) {
     '</div>' +
     (d.service ? '<div class="dept-service">📌 ' + esc(d.service) + '</div>' : '') +
     '<div class="dept-stats">' +
-      '<div><b>' + formatNum(d.contract) + '</b><span>合同额（万元）</span></div>' +
-      '<div><b>' + formatNum(d.patrol) + '</b><span>2026年巡飞次数</span></div>' +
-      '<div><b>' + formatNum(d.problems) + '</b><span>发现问题（件）</span></div>' +
+      '<div><b>' + formatNum(t.amount) + '</b><span>合同额（万元）</span></div>' +
+      '<div><b>' + formatNum(t.patrol) + '</b><span>2026年巡飞次数</span></div>' +
+      '<div><b>' + formatNum(t.problems) + '</b><span>发现问题（件）</span></div>' +
     '</div>' +
-    (cats ? '<div class="dept-sec-label">问题分类明细</div><div class="chip-row">' + cats + '</div>' : '') +
-    (projs ? '<div class="dept-sec-label">运营项目（' + (d.projects || []).length + '个）</div><div class="chip-row">' + projs + '</div>' : '') +
+    '<div class="dept-sec-label">合同列表（' + t.count + ' 份）</div>' + contractItems +
+    (catChips ? '<div class="dept-sec-label">问题分类汇总</div><div class="chip-row">' + catChips + '</div>' : '') +
   '</div>';
 }
 
-/* 部门名称候选项（datalist + 卡点表单下拉）与运营模块联动 */
+/* 部门名称建议（部门弹窗 datalist + 卡点部门 datalist）与运营模块联动 */
 function refreshDeptOptions() {
   const names = [...new Set([...BASE_DEPTS, ...depts.map(d => d.name)])];
   $('#dept-name-list').innerHTML = names.map(n => '<option value="' + esc(n) + '"></option>').join('');
-  const sel = $('#f-blk-dept');
-  const cur = sel.value;
-  sel.innerHTML = names.map(n => '<option value="' + esc(n) + '">' + esc(n) + '</option>').join('');
-  if (names.includes(cur)) sel.value = cur;
+  $('#blk-dept-list').innerHTML = names.map(n => '<option value="' + esc(n) + '"></option>').join('');
 }
 
 function openDeptModal(dept) {
@@ -683,18 +795,52 @@ function openDeptModal(dept) {
   $('#modal-dept-title').textContent = dept ? '编辑部门数据' : '添加部门数据';
   $('#f-dept-name').value = dept ? dept.name : '';
   $('#f-dept-service').value = dept ? (dept.service || '') : '';
-  $('#f-dept-contract').value = dept ? dept.contract : '';
-  $('#f-dept-patrol').value = dept ? dept.patrol : '';
-  $('#f-dept-problem').value = dept ? dept.problems : '';
-  $('#f-dept-cats').innerHTML = '';
-  const catList = (dept && dept.cats && dept.cats.length) ? dept.cats : [null];
-  catList.forEach(c => addCatRow(c ? c.name : '', c ? c.count : ''));
-  $('#f-dept-projects').value = dept && dept.projects ? dept.projects.join('，') : '';
+  const wrap = $('#f-dept-contracts');
+  wrap.innerHTML = '';
+  const list = (dept && dept.contracts && dept.contracts.length) ? dept.contracts : [null];
+  list.forEach(c => addContractBox(c && c.name ? c : null));
   openModal('#modal-dept');
 }
 
-/* 问题分类明细动态行 */
-function addCatRow(name = '', count = '') {
+/* 合同编辑块（动态添加/删除，块内含问题分类明细行） */
+function addContractBox(c = null) {
+  const box = document.createElement('div');
+  box.className = 'contract-box';
+  const data = c || { name: '', content: '', amount: '', patrol: '', problems: '', cats: [] };
+  box.innerHTML =
+    '<div class="cb-head"><span class="cb-title">合同</span>' +
+      '<button type="button" class="btn btn-danger-ghost btn-xs cb-del">删除合同</button></div>' +
+    '<div class="form-row-2">' +
+      '<div><label class="cb-label">合同名称</label><input type="text" class="c-name" placeholder="如：城市网格化巡查服务合同" value="' + esc(data.name) + '"></div>' +
+      '<div><label class="cb-label">合同额（万元）</label><input type="number" class="c-amount" min="0" step="0.1" placeholder="0" value="' + esc(data.amount) + '"></div>' +
+    '</div>' +
+    '<div><label class="cb-label">合同内容（具体服务事项）</label><input type="text" class="c-content" placeholder="简述该合同的具体服务内容" value="' + esc(data.content) + '"></div>' +
+    '<div class="form-row-2" style="margin-top:8px">' +
+      '<div><label class="cb-label">2026年巡飞次数</label><input type="number" class="c-patrol" min="0" step="1" placeholder="0" value="' + esc(data.patrol) + '"></div>' +
+      '<div><label class="cb-label">发现问题数（件）</label><input type="number" class="c-problems" min="0" step="1" placeholder="0" value="' + esc(data.problems) + '"></div>' +
+    '</div>' +
+    '<div class="cb-cats"><label class="cb-label">问题分类明细（选填）</label><div class="c-cats"></div>' +
+      '<button type="button" class="btn btn-ghost btn-xs c-addcat">＋ 添加分类</button></div>';
+  box.querySelector('.cb-del').addEventListener('click', () => {
+    const all = $$('#f-dept-contracts .contract-box');
+    if (all.length <= 1) { box.remove(); addContractBox(); }   // 至少保留一个空块
+    else box.remove();
+    renumberContractBoxes();
+  });
+  box.querySelector('.c-addcat').addEventListener('click', () => addCatRow(box.querySelector('.c-cats')));
+  const catsWrap = box.querySelector('.c-cats');
+  const catList = (data.cats && data.cats.length) ? data.cats : [null];
+  catList.forEach(cat => addCatRow(catsWrap, cat ? cat.name : '', cat ? cat.count : ''));
+  $('#f-dept-contracts').appendChild(box);
+}
+
+/* 合同块编号 */
+function renumberContractBoxes() {
+  $$('#f-dept-contracts .contract-box .cb-title').forEach((el, i) => { el.textContent = '合同 #' + (i + 1); });
+}
+
+/* 问题分类明细动态行（可指定容器，供合同块复用） */
+function addCatRow(root = $('#f-dept-cats'), name = '', count = '') {
   const row = document.createElement('div');
   row.className = 'cat-row';
   row.innerHTML =
@@ -702,28 +848,42 @@ function addCatRow(name = '', count = '') {
     '<input class="cat-count" type="number" placeholder="数量" min="0" value="' + esc(count) + '">' +
     '<button type="button" class="del-cat" title="删除该分类">×</button>';
   row.querySelector('.del-cat').addEventListener('click', () => row.remove());
-  $('#f-dept-cats').appendChild(row);
+  root.appendChild(row);
 }
 
 function saveDept() {
   const name = $('#f-dept-name').value.trim();
   if (!name) return toast('请填写部门名称', 'error');
-  const data = {
-    name: name,
-    service: $('#f-dept-service').value.trim(),
-    contract: toNum($('#f-dept-contract').value),
-    patrol: Math.round(toNum($('#f-dept-patrol').value)),
-    problems: Math.round(toNum($('#f-dept-problem').value)),
-    cats: $$('#f-dept-cats .cat-row')
+  const contracts = $$('#f-dept-contracts .contract-box').map(box => {
+    const cats = $$('.cat-row', box.querySelector('.c-cats'))
       .map(r => ({ name: r.querySelector('.cat-name').value.trim(), count: Math.round(toNum(r.querySelector('.cat-count').value)) }))
-      .filter(c => c.name),
-    projects: $('#f-dept-projects').value.split(/[,，、]/).map(s => s.trim()).filter(Boolean)
-  };
+      .filter(c => c.name);
+    return {
+      id: uid(),
+      name: box.querySelector('.c-name').value.trim(),
+      content: box.querySelector('.c-content').value.trim(),
+      amount: toNum(box.querySelector('.c-amount').value),
+      patrol: Math.round(toNum(box.querySelector('.c-patrol').value)),
+      problems: Math.round(toNum(box.querySelector('.c-problems').value)),
+      cats: cats
+    };
+  }).filter(c => c.name || c.amount > 0 || c.patrol > 0 || c.problems > 0 || c.cats.length);   // 空白合同块丢弃
+  if (!contracts.length) return toast('请至少填写一份合同信息', 'error');
+
   if (editingDeptId) {
     const target = depts.find(x => x.id === editingDeptId);
-    if (target) { Object.assign(target, data); toast('部门数据已更新'); }
+    if (target) {
+      target.name = name;
+      target.service = $('#f-dept-service').value.trim();
+      target.contracts = contracts.map((c, i) => {
+        const old = (target.contracts || [])[i];
+        if (old) c.id = old.id;
+        return c;
+      });
+      toast('部门数据已更新');
+    }
   } else {
-    depts.push(Object.assign({ id: uid() }, data));
+    depts.push({ id: uid(), name: name, service: $('#f-dept-service').value.trim(), contracts: contracts });
     toast('部门数据添加成功');
   }
   saveDepts(); renderOps(); refreshDeptOptions();
@@ -731,10 +891,11 @@ function saveDept() {
 }
 
 /* =========================================================
-   模块三：进度卡点
+   模块三：进度卡点（拖拽排序 + 未开始/进行中/待推进/已解决）
    ========================================================= */
 let editingBlockerId = null;
-const BLK_STATUS_CLASS = { '进行中': 'tag-blue', '待推进': 'tag-orange', '已解决': 'tag-green' };
+let dragBlkId = null;
+const BLK_STATUS_CLASS = { '未开始': 'tag-gray', '进行中': 'tag-blue', '待推进': 'tag-orange', '已解决': 'tag-green' };
 
 function bindBlockerEvents() {
   $('#btn-add-blocker').addEventListener('click', () => openBlockerModal(null));
@@ -754,13 +915,68 @@ function bindBlockerEvents() {
       });
     }
   });
+
+  bindTableDrag('#blocker-tbody', {
+    getDragId: () => dragBlkId,
+    setDragId: id => { dragBlkId = id; },
+    reorder: (srcId, targetId) => reorderById(blockers, srcId, targetId),
+    onDrop: () => { saveBlockers(); renderBlockers(); toast('排序已保存'); }
+  });
+}
+
+/* 在数组内把 srcId 项移动到 targetId 项之前 */
+function reorderById(arr, srcId, targetId) {
+  const from = arr.findIndex(x => x.id === srcId);
+  if (from < 0 || srcId === targetId) return false;
+  const [item] = arr.splice(from, 1);
+  let to = arr.findIndex(x => x.id === targetId);
+  if (to < 0) to = arr.length;
+  arr.splice(to, 0, item);
+  return true;
+}
+
+/* 通用表格行拖拽绑定（HTML5 Drag & Drop） */
+function bindTableDrag(tbodySel, opts) {
+  const tbody = $(tbodySel);
+  tbody.addEventListener('dragstart', e => {
+    const tr = e.target.closest('tr[data-id]');
+    if (!tr) return;
+    opts.setDragId(tr.dataset.id);
+    tr.classList.add('dragging');
+    e.dataTransfer.effectAllowed = 'move';
+    try { e.dataTransfer.setData('text/plain', tr.dataset.id); } catch (_) { /* IE 兼容忽略 */ }
+  });
+  tbody.addEventListener('dragover', e => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+    const over = e.target.closest('tr[data-id]');
+    $$('tr', tbody).forEach(r => r.classList.remove('drag-over'));
+    if (over && over.dataset.id !== opts.getDragId()) over.classList.add('drag-over');
+  });
+  tbody.addEventListener('drop', e => {
+    e.preventDefault();
+    const over = e.target.closest('tr[data-id]');
+    if (over && opts.getDragId() && over.dataset.id !== opts.getDragId()) {
+      if (opts.reorder(opts.getDragId(), over.dataset.id) && opts.onDrop) opts.onDrop();
+    }
+  });
+  tbody.addEventListener('dragend', () => {
+    $$('tr', tbody).forEach(r => r.classList.remove('dragging', 'drag-over'));
+    opts.setDragId(null);
+  });
+}
+
+/* 卡点拖拽落库（由通用拖拽回调触发） */
+function saveBlockersOrder() {
+  saveBlockers(); renderBlockers();
+  toast('排序已保存');
 }
 
 function renderBlockers() {
-  const list = [...blockers].sort((a, b) => (b.updateTime || '').localeCompare(a.updateTime || ''));
-  $('#blocker-tbody').innerHTML = list.map((b, i) =>
-    '<tr>' +
+  $('#blocker-tbody').innerHTML = blockers.map((b, i) =>
+    '<tr data-id="' + b.id + '">' +
       '<td>' + (i + 1) + '</td>' +
+      '<td class="drag-handle" title="拖拽调整顺序">⋮⋮</td>' +
       '<td class="td-title">' + esc(b.title) + '</td>' +
       '<td>' + esc(b.department) + '</td>' +
       '<td class="td-wrap">' + esc(b.progress) + '</td>' +
@@ -774,15 +990,14 @@ function renderBlockers() {
       '</td>' +
     '</tr>'
   ).join('');
-  $('#blocker-empty').style.display = list.length ? 'none' : '';
+  $('#blocker-empty').style.display = blockers.length ? 'none' : '';
 }
 
 function openBlockerModal(b) {
   editingBlockerId = b ? b.id : null;
   $('#modal-blocker-title').textContent = b ? '编辑卡点' : '添加卡点';
   $('#f-blk-title').value = b ? b.title : '';
-  const sel = $('#f-blk-dept');
-  $('#f-blk-dept').value = b ? b.department : (sel.options[0] ? sel.options[0].value : '');
+  $('#f-blk-dept').value = b ? b.department : '';
   $('#f-blk-progress').value = b ? b.progress : '';
   $('#f-blk-person').value = b ? b.person : '';
   $('#f-blk-help').value = b ? (b.help || '') : '';
@@ -794,12 +1009,14 @@ function saveBlocker() {
   const title = $('#f-blk-title').value.trim();
   const progress = $('#f-blk-progress').value.trim();
   const person = $('#f-blk-person').value.trim();
+  const department = $('#f-blk-dept').value.trim();
   if (!title) return toast('请填写问题/事项名称', 'error');
+  if (!department) return toast('请填写所属部门', 'error');
   if (!progress) return toast('请填写进展情况', 'error');
   if (!person) return toast('请填写负责人', 'error');
   const data = {
     title: title,
-    department: $('#f-blk-dept').value,
+    department: department,
     progress: progress,
     person: person,
     help: $('#f-blk-help').value.trim(),
@@ -810,7 +1027,7 @@ function saveBlocker() {
     const target = blockers.find(x => x.id === editingBlockerId);
     if (target) { Object.assign(target, data); toast('卡点已更新'); }
   } else {
-    blockers.push(Object.assign({ id: uid() }, data));
+    blockers.push(Object.assign({ id: uid() }, data));   // 追加到末尾，可用拖拽调整位置
     toast('卡点添加成功');
   }
   saveBlockers(); renderBlockers();
@@ -818,10 +1035,11 @@ function saveBlocker() {
 }
 
 /* =========================================================
-   模块四：来年统采进展
+   模块四：来年统采（表格 + 拖拽排序）
    ========================================================= */
 let currentProcTab = '已落地';
 let editingProcId = null;
+let dragProcId = null;
 const FOLLOW_CLASS = { '初步接触': 'tag-cyan', '方案编制中': 'tag-blue', '待报价': 'tag-orange', '待决策': 'tag-purple' };
 
 function bindProcEvents() {
@@ -833,7 +1051,7 @@ function bindProcEvents() {
   $('#f-proc-cat').addEventListener('change', toggleProcFollow);
   $('#f-proc-save').addEventListener('click', saveProc);
 
-  $('#proc-grid').addEventListener('click', e => {
+  $('#proc-tbody').addEventListener('click', e => {
     const editBtn = e.target.closest('[data-edit-proc]');
     const delBtn = e.target.closest('[data-del-proc]');
     if (editBtn) openProcModal(procs.find(p => p.id === editBtn.dataset.editProc) || null);
@@ -847,6 +1065,22 @@ function bindProcEvents() {
       });
     }
   });
+
+  bindTableDrag('#proc-tbody', {
+    getDragId: () => dragProcId,
+    setDragId: id => { dragProcId = id; },
+    reorder: (srcId, targetId) => {
+      /* 只在当前分类清单内部调整顺序 */
+      const list = procs.filter(p => p.category === currentProcTab);
+      if (reorderById(list, srcId, targetId)) {
+        const others = procs.filter(p => p.category !== currentProcTab);
+        procs = [...list, ...others];
+        return true;
+      }
+      return false;
+    },
+    onDrop: () => { saveProcs(); renderProc(); toast('排序已保存'); }
+  });
 }
 
 function renderProc() {
@@ -857,35 +1091,30 @@ function renderProc() {
     t.querySelector('.tab-count').textContent = counts[t.dataset.tab] || 0;
   });
   const list = procs.filter(p => p.category === currentProcTab);
-  $('#proc-grid').innerHTML = list.length
-    ? list.map(procCardHTML).join('')
-    : '<div class="empty-state" style="grid-column:1/-1">该清单暂无需求记录，点击右上角「添加需求」新建</div>';
+  $('#proc-tbody').innerHTML = list.map((p, i) => procRowHTML(p, i)).join('');
+  $('#proc-empty').style.display = list.length ? 'none' : '';
 }
 
-function procCardHTML(p) {
+function procRowHTML(p, i) {
   const danger = p.category === '未对接';
-  return '<div class="card proc-card' + (danger ? ' proc-danger' : '') + '">' +
-    '<div class="proc-head">' +
-      '<div>' +
-        '<div class="proc-name">' + esc(p.name) + (danger ? ' <span class="tag tag-red">重点关注</span>' : '') + '</div>' +
-        '<div class="proc-unit">' + esc(p.unit) + '</div>' +
-      '</div>' +
-      '<div class="card-actions">' +
-        '<button class="btn btn-ghost btn-xs" data-edit-proc="' + p.id + '">编辑</button>' +
-        '<button class="btn btn-danger-ghost btn-xs" data-del-proc="' + p.id + '">删除</button>' +
-      '</div>' +
-    '</div>' +
-    '<div class="proc-desc">' + esc(p.service) + '</div>' +
-    '<div class="proc-fields">' +
-      '<div class="proc-field"><span>区域</span><b>' + esc(p.region) + '</b></div>' +
-      '<div class="proc-field"><span>频次</span><b>' + esc(p.freq) + '</b></div>' +
-      '<div class="proc-field"><span>预算</span><b>' + (p.budget != null ? formatNum(p.budget) + ' 万元' : '待定') + '</b></div>' +
-      (p.category !== '已落地'
-        ? '<div class="proc-field"><span>跟进状态</span><b><span class="tag ' + (FOLLOW_CLASS[p.follow] || 'tag-gray') + '">' + esc(p.follow || '—') + '</span></b></div>'
-        : '') +
-    '</div>' +
-    (p.remark ? '<div class="proc-remark">备注：' + esc(p.remark) + '</div>' : '') +
-  '</div>';
+  return '<tr data-id="' + p.id + '" class="' + (danger ? 'row-danger' : '') + '">' +
+    '<td>' + (i + 1) + '</td>' +
+    '<td class="drag-handle" title="拖拽调整顺序">⋮⋮</td>' +
+    '<td class="td-title">' + esc(p.name) + (danger ? ' <span class="tag tag-red">重点关注</span>' : '') + '</td>' +
+    '<td>' + esc(p.unit) + '</td>' +
+    '<td class="td-wrap">' + esc(p.service) + '</td>' +
+    '<td>' + esc(p.region) + '</td>' +
+    '<td>' + esc(p.freq) + '</td>' +
+    '<td>' + (p.budget != null ? formatNum(p.budget) : '待定') + '</td>' +
+    '<td>' + (p.category !== '已落地'
+      ? '<span class="tag ' + (FOLLOW_CLASS[p.follow] || 'tag-gray') + '">' + esc(p.follow || '—') + '</span>'
+      : '—') + '</td>' +
+    '<td class="td-wrap">' + (p.remark ? esc(p.remark) : '—') + '</td>' +
+    '<td class="td-ops">' +
+      '<button class="btn btn-ghost btn-xs" data-edit-proc="' + p.id + '">编辑</button>' +
+      '<button class="btn btn-danger-ghost btn-xs" data-del-proc="' + p.id + '">删除</button>' +
+    '</td>' +
+  '</tr>';
 }
 
 /* 跟进状态仅"潜在合作 / 未对接"显示 */

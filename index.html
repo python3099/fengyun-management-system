@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>广东丰云智能科技有限公司管理系统</title>
-<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🚁</text></svg>">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 48'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop offset='0' stop-color='%233B82F6'/%3E%3Cstop offset='1' stop-color='%231D4ED8'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='48' height='48' rx='11' fill='url(%23g)'/%3E%3Cg stroke='%23fff' stroke-width='2.6' fill='none' stroke-linecap='round'%3E%3Ccircle cx='12' cy='12' r='4.2'/%3E%3Ccircle cx='36' cy='12' r='4.2'/%3E%3Ccircle cx='12' cy='36' r='4.2'/%3E%3Ccircle cx='36' cy='36' r='4.2'/%3E%3Cpath d='M15 15l5.5 5.5M33 15l-5.5 5.5M15 33l5.5-5.5M33 33l-5.5-5.5'/%3E%3C/g%3E%3Ccircle cx='24' cy='24' r='3.4' fill='%23fff'/%3E%3C/svg%3E">
 <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
@@ -13,7 +13,9 @@
 <!-- ===================== 顶部导航栏 ===================== -->
 <header class="topbar">
   <div class="topbar-left">
-    <div class="logo" title="广东丰云智能科技有限公司">丰云</div>
+    <div class="logo" title="广东丰云智能科技有限公司">
+      <svg viewBox="0 0 48 48" width="24" height="24" aria-hidden="true"><g stroke="#fff" stroke-width="2.6" fill="none" stroke-linecap="round"><circle cx="12" cy="12" r="4.2"/><circle cx="36" cy="12" r="4.2"/><circle cx="12" cy="36" r="4.2"/><circle cx="36" cy="36" r="4.2"/><path d="M15 15l5.5 5.5M33 15l-5.5 5.5M15 33l5.5-5.5M33 33l-5.5-5.5"/></g><circle cx="24" cy="24" r="3.4" fill="#fff"/></svg>
+    </div>
     <span class="sys-title">广东丰云智能科技有限公司管理系统</span>
   </div>
   <div class="topbar-right">
@@ -29,7 +31,7 @@
     <button class="menu-item active" data-page="todo"><span class="mi-icon">📋</span><span class="mi-text">日常待办</span></button>
     <button class="menu-item" data-page="ops"><span class="mi-icon">📊</span><span class="mi-text">运营情况</span></button>
     <button class="menu-item" data-page="blocker"><span class="mi-icon">🚧</span><span class="mi-text">进度卡点</span></button>
-    <button class="menu-item" data-page="proc"><span class="mi-icon">📈</span><span class="mi-text">来年统采进展</span></button>
+    <button class="menu-item" data-page="proc"><span class="mi-icon">📈</span><span class="mi-text">来年统采</span></button>
   </nav>
   <div class="sidebar-foot">广东丰云智能科技有限公司<br>内部管理系统 · <span id="app-version"></span></div>
 </aside>
@@ -50,6 +52,11 @@
     <div class="card calendar-card">
       <div class="cal-toolbar">
         <div class="cal-title" id="cal-title">--</div>
+        <div class="cal-legend">
+          <span class="lg-day lg-red">周末/假日红字</span>
+          <span class="day-badge badge-rest">休</span>法定假日
+          <span class="day-badge badge-work">班</span>调休上班
+        </div>
         <div class="cal-nav">
           <button class="btn btn-ghost btn-sm" id="cal-prev">‹ 上一月</button>
           <button class="btn btn-ghost btn-sm" id="cal-today">今天</button>
@@ -57,7 +64,7 @@
         </div>
       </div>
       <div class="cal-week-header">
-        <span>一</span><span>二</span><span>三</span><span>四</span><span>五</span><span>六</span><span>日</span>
+        <span>一</span><span>二</span><span>三</span><span>四</span><span>五</span><span class="lg-red">六</span><span class="lg-red">日</span>
       </div>
       <div class="cal-grid" id="cal-grid"></div>
     </div>
@@ -83,7 +90,7 @@
     <div class="page-head">
       <div>
         <h2>运营情况</h2>
-        <p class="page-sub">公司整体运营数据概览与各业务部门经营情况看板</p>
+        <p class="page-sub">公司整体运营数据概览与各部门（多合同）经营情况看板，按合同总额排序</p>
       </div>
       <button class="btn btn-primary" id="btn-add-dept">＋ 添加部门数据</button>
     </div>
@@ -104,7 +111,7 @@
       </div>
       <div class="stat-card">
         <div class="stat-icon icon-purple">📁</div>
-        <div><div class="stat-label">运营项目总数（个）</div><div class="stat-value" id="stat-project">0</div></div>
+        <div><div class="stat-label">合同总数（份）</div><div class="stat-value" id="stat-project">0</div></div>
       </div>
     </div>
 
@@ -117,17 +124,18 @@
     <div class="page-head">
       <div>
         <h2>进度卡点</h2>
-        <p class="page-sub">跟踪各部门工作中的卡点问题与待推进事项</p>
+        <p class="page-sub">跟踪各部门工作中的卡点问题与待推进事项，表格行可拖拽调整顺序</p>
       </div>
       <button class="btn btn-primary" id="btn-add-blocker">＋ 添加卡点</button>
     </div>
 
     <div class="card table-card">
       <div class="table-wrap">
-        <table class="data-table">
+        <table class="data-table drag-table">
           <thead>
             <tr>
               <th>序号</th>
+              <th class="th-drag"></th>
               <th>问题/事项名称</th>
               <th>所属部门</th>
               <th>进展情况</th>
@@ -145,12 +153,12 @@
     </div>
   </section>
 
-  <!-- ========== 模块四：来年统采进展 ========== -->
+  <!-- ========== 模块四：来年统采 ========== -->
   <section class="page" id="page-proc">
     <div class="page-head">
       <div>
-        <h2>来年统采进展</h2>
-        <p class="page-sub">2027 年度统一采购需求分类跟进清单，未对接清单为重点关注事项</p>
+        <h2>来年统采</h2>
+        <p class="page-sub">2027 年度统一采购需求分类跟进清单，未对接需求为重点关注事项，表格行可拖拽调整顺序</p>
       </div>
       <button class="btn btn-primary" id="btn-add-proc">＋ 添加需求</button>
     </div>
@@ -162,7 +170,29 @@
       <button class="proc-tab tab-danger" data-tab="未对接">未对接部门需求清单 <span class="tab-count">0</span></button>
     </div>
 
-    <div class="proc-grid" id="proc-grid"></div>
+    <div class="card table-card">
+      <div class="table-wrap">
+        <table class="data-table drag-table proc-table">
+          <thead>
+            <tr>
+              <th>序号</th>
+              <th class="th-drag"></th>
+              <th>需求名称</th>
+              <th>对应单位</th>
+              <th>服务需求描述</th>
+              <th>区域</th>
+              <th>频次</th>
+              <th>预算（万元）</th>
+              <th>跟进状态</th>
+              <th>备注</th>
+              <th>操作</th>
+            </tr>
+          </thead>
+          <tbody id="proc-tbody"></tbody>
+        </table>
+      </div>
+      <div class="empty-state" id="proc-empty" style="display:none">该清单暂无需求记录，点击右上角「添加需求」新建</div>
+    </div>
   </section>
 </main>
 
@@ -208,37 +238,21 @@
       <button class="modal-close" data-close title="关闭">×</button>
     </div>
     <div class="modal-body">
-      <div class="form-item">
-        <label>部门名称<i>*</i></label>
-        <input type="text" id="f-dept-name" list="dept-name-list" placeholder="请输入或选择部门名称" autocomplete="off">
-        <datalist id="dept-name-list"></datalist>
-      </div>
-      <div class="form-item">
-        <label>服务内容</label>
-        <input type="text" id="f-dept-service" placeholder="简述该部门的核心服务，如：城市网格化巡查">
-      </div>
-      <div class="form-row-3">
+      <div class="form-row-2">
         <div class="form-item">
-          <label>合同额（万元）</label>
-          <input type="number" id="f-dept-contract" min="0" step="0.1" placeholder="0">
+          <label>部门名称<i>*</i></label>
+          <input type="text" id="f-dept-name" list="dept-name-list" placeholder="自定义填写，如：住建局" autocomplete="off">
+          <datalist id="dept-name-list"></datalist>
         </div>
         <div class="form-item">
-          <label>2026年巡飞次数</label>
-          <input type="number" id="f-dept-patrol" min="0" step="1" placeholder="0">
-        </div>
-        <div class="form-item">
-          <label>发现问题数（件）</label>
-          <input type="number" id="f-dept-problem" min="0" step="1" placeholder="0">
+          <label>服务内容（部门简述）</label>
+          <input type="text" id="f-dept-service" placeholder="简述该部门的核心服务">
         </div>
       </div>
       <div class="form-item">
-        <label>问题分类明细（选填）</label>
-        <div id="f-dept-cats"></div>
-        <button type="button" class="btn btn-ghost btn-sm" id="f-dept-addcat">＋ 添加分类</button>
-      </div>
-      <div class="form-item">
-        <label>运营项目（多个用逗号分隔）</label>
-        <input type="text" id="f-dept-projects" placeholder="如：XX区网格巡查项目，XX河监测项目">
+        <label>合同列表<i>*</i>（部门可包含多个合同，看板自动汇总）</label>
+        <div id="f-dept-contracts"></div>
+        <button type="button" class="btn btn-ghost btn-sm" id="f-dept-addcontract">＋ 添加合同</button>
       </div>
     </div>
     <div class="modal-foot">
@@ -262,8 +276,9 @@
       </div>
       <div class="form-row-2">
         <div class="form-item">
-          <label>所属部门<i>*</i></label>
-          <select id="f-blk-dept"></select>
+          <label>所属部门<i>*</i>（默认读取运营情况部门，可自定义）</label>
+          <input type="text" id="f-blk-dept" list="blk-dept-list" placeholder="选择或自定义填写" autocomplete="off">
+          <datalist id="blk-dept-list"></datalist>
         </div>
         <div class="form-item">
           <label>负责人<i>*</i></label>
@@ -281,6 +296,7 @@
       <div class="form-item">
         <label>状态</label>
         <select id="f-blk-status">
+          <option value="未开始">未开始</option>
           <option value="进行中" selected>进行中</option>
           <option value="待推进">待推进</option>
           <option value="已解决">已解决</option>
@@ -328,7 +344,7 @@
         </div>
         <div class="form-item">
           <label>对应单位<i>*</i></label>
-          <input type="text" id="f-proc-unit" placeholder="如：城市治理事业部" autocomplete="off">
+          <input type="text" id="f-proc-unit" placeholder="如：住建局" autocomplete="off">
         </div>
       </div>
       <div class="form-item">
