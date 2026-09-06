@@ -468,6 +468,16 @@ select { cursor: pointer; }
 .proc-tab.tab-danger .tab-count { background: rgba(239, 68, 68, .14); color: #B91C1C; }
 .proc-tab.tab-danger.active .tab-count { background: rgba(255, 255, 255, .25); color: #fff; }
 
+/* 进度卡点：部门/负责人/状态三列内容居中（含表头筛选下拉） */
+.data-table:has(#blocker-tbody) th:nth-child(3),
+.data-table:has(#blocker-tbody) td:nth-child(3),
+.data-table:has(#blocker-tbody) th:nth-child(6),
+.data-table:has(#blocker-tbody) td:nth-child(6),
+.data-table:has(#blocker-tbody) th:nth-child(8),
+.data-table:has(#blocker-tbody) td:nth-child(8) { text-align: center; }
+.data-table:has(#blocker-tbody) td:nth-child(3),
+.data-table:has(#blocker-tbody) td:nth-child(6) { font-weight: 500; }
+
 /* 未对接清单：整行淡红底 + 左侧红色渐变条，重点关注 */
 .proc-table tbody tr.row-danger td { background: linear-gradient(90deg, #FFF5F5, #FFFAFA 30%); }
 .proc-table tbody tr.row-danger td:first-child {
@@ -484,11 +494,17 @@ select { cursor: pointer; }
   font-weight: 700; color: #1E3A8A; font-size: 13.5px;
 }
 .proc-table tr.proc-group:hover td { background: linear-gradient(90deg, #E3EDFF, #F4F8FF 60%); }
+.proc-table tr.proc-group .g-row { display: flex; align-items: center; gap: 4px; width: 100%; }
+.proc-table tr.proc-group .g-left { display: inline-flex; align-items: center; gap: 4px; min-width: 0; }
 .proc-table tr.proc-group .g-unit { letter-spacing: .2px; }
 .proc-table tr.proc-group .g-count {
   margin-left: 10px; font-size: 11.5px; font-weight: 600; color: #2563EB;
-  background: rgba(59, 130, 246, .12); border-radius: 999px; padding: 1px 9px;
+  background: rgba(59, 130, 246, .12); border-radius: 999px; padding: 1px 9px; white-space: nowrap;
 }
+.proc-table tr.proc-group .g-ops { display: inline-flex; gap: 6px; flex-shrink: 0; margin-left: auto; }
+.proc-table tr.proc-group .g-count { flex-shrink: 0; }
+.proc-table tr.proc-group .g-ops .btn { opacity: .85; }
+.proc-table tr.proc-group .g-ops .btn:hover { opacity: 1; }
 /* 组内子需求序号 */
 .g-child-no { color: #2563EB; font-weight: 700; margin-right: 4px; font-variant-numeric: tabular-nums; }
 

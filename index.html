@@ -262,6 +262,26 @@
   </div>
 </div>
 
+<!-- ===================== 弹窗：部门分组重命名（来年统采） ===================== -->
+<div class="modal-overlay" id="modal-unit">
+  <div class="modal modal-sm">
+    <div class="modal-head">
+      <h3>重命名部门</h3>
+      <button class="modal-close" data-close title="关闭">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-item" style="margin-bottom:0">
+        <label>部门 / 单位名称<i>*</i>（该部门下所有需求将同步更新）</label>
+        <input type="text" id="f-unit-name" placeholder="请输入新的部门名称" autocomplete="off">
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-ghost" data-close>取消</button>
+      <button class="btn btn-primary" id="f-unit-save">保存</button>
+    </div>
+  </div>
+</div>
+
 <!-- ===================== 弹窗：部门数据表单 ===================== -->
 <div class="modal-overlay" id="modal-dept">
   <div class="modal">

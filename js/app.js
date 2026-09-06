@@ -7,7 +7,7 @@
      3. local  - 浏览器本地模式：localStorage（兜底方案，始终作为镜像缓存）
    ========================================================= */
 
-const APP_VERSION = '1.5.0';
+const APP_VERSION = '1.6.0';
 
 /* =========================================================
    工具函数
@@ -896,6 +896,7 @@ function openDeptModal(dept) {
   const list = (dept && dept.contracts && dept.contracts.length) ? dept.contracts : [null];
   list.forEach(c => addContractBox(c && c.name ? c : null));
   renumberContractBoxes();   // 编辑弹窗内的合同块按序号区分（合同 #1 / #2 / #3）
+  openModal('#modal-dept');
 }
 
 /* 合同编辑块（动态添加/删除，块内含问题分类明细行） */
@@ -1212,10 +1213,13 @@ function bindProcEvents() {
       });
       return;
     }
-    /* 点击分组头：展开/收起该部门下的全部子需求 */
+    /* 部门分组行：添加子需求 / 重命名部门 / 删除部门 / 展开收起 */
     const groupHead = e.target.closest('.proc-group');
     if (groupHead) {
       const unit = groupHead.dataset.unit;
+      if (e.target.closest('[data-g-add]')) { openProcModalForUnit(unit); return; }
+      if (e.target.closest('[data-g-rename]')) { openUnitRename(unit); return; }
+      if (e.target.closest('[data-g-del]')) { deleteUnitGroup(unit); return; }
       if (collapsedProcUnits.has(unit)) collapsedProcUnits.delete(unit); else collapsedProcUnits.add(unit);
       renderProc();
       return;
@@ -1228,6 +1232,10 @@ function bindProcEvents() {
     if (expandedProcIds.has(id)) expandedProcIds.delete(id); else expandedProcIds.add(id);
     renderProc();
   });
+
+  /* 部门重命名弹窗保存 */
+  $('#f-unit-save').addEventListener('click', saveUnitRename);
+  $('#f-unit-name').addEventListener('keydown', e => { if (e.key === 'Enter') saveUnitRename(); });
 
   /* 自定义指针拖拽：在当前分类清单内部调整顺序（收起的分组不参与） */
   enableRowDrag('#proc-tbody', () => {
@@ -1242,6 +1250,54 @@ function isProcVisible(p) {
   return p.category === currentProcTab && !collapsedProcUnits.has(p.unit);
 }
 
+/* 在指定部门下新增子需求（打开需求弹窗并锁定单位） */
+function openProcModalForUnit(unit) {
+  openProcModal(null);
+  const input = $('#f-proc-unit');
+  input.value = unit;
+  input.readOnly = true;
+  input.style.background = '#F1F5F9';
+  input.title = '单位已锁定为该部门（组内添加）';
+  toast('正在为「' + unit + '」添加子需求，单位已锁定', 'info');
+}
+
+/* 重命名部门：该部门下所有需求（含其他清单分类）同步更新 */
+let renamingUnit = '';
+function openUnitRename(unit) {
+  renamingUnit = unit;
+  $('#f-unit-name').value = unit;
+  openModal('#modal-unit');
+  setTimeout(() => $('#f-unit-name').select(), 60);
+}
+function saveUnitRename() {
+  const name = $('#f-unit-name').value.trim();
+  if (!name) return toast('请填写部门名称', 'error');
+  if (name === renamingUnit) { closeModal('#modal-unit'); return; }
+  let n = 0;
+  procs.forEach(p => { if (p.unit === renamingUnit) { p.unit = name; n++; } });
+  if (collapsedProcUnits.has(renamingUnit)) {
+    collapsedProcUnits.delete(renamingUnit);
+    collapsedProcUnits.add(name);
+  }
+  saveProcs(); renderProc();
+  closeModal('#modal-unit');
+  toast('已重命名为「' + name + '」，同步更新 ' + n + ' 项需求');
+}
+
+/* 删除整个部门分组：其下所有需求（含其他清单分类）一并删除 */
+function deleteUnitGroup(unit) {
+  const all = procs.filter(p => p.unit === unit);
+  if (!all.length) return;
+  const byCat = {};
+  all.forEach(p => { byCat[p.category] = (byCat[p.category] || 0) + 1; });
+  const detail = Object.keys(byCat).map(c => c + ' ' + byCat[c] + ' 项').join('、');
+  confirmDialog('确定要删除部门「' + unit + '」吗？其下全部 ' + all.length + ' 项需求（' + detail + '）将一并删除，不可恢复。', () => {
+    procs = procs.filter(p => p.unit !== unit);
+    saveProcs(); renderProc();
+    toast('部门「' + unit + '」及其需求已删除');
+  });
+}
+
 function renderProc() {
   const counts = {};
   procs.forEach(p => { counts[p.category] = (counts[p.category] || 0) + 1; });
@@ -1249,7 +1305,7 @@ function renderProc() {
     t.classList.toggle('active', t.dataset.tab === currentProcTab);
     t.querySelector('.tab-count').textContent = counts[t.dataset.tab] || 0;
   });
-  /* 按单位/部门分组展示：分组头 + 组内子需求 1. 2. 3.（分组可点击收起） */
+  /* 按单位/部门分组展示：分组头（可添加子需求/重命名/删除）+ 组内子需求 1. 2. 3. */
   const list = procs.filter(p => p.category === currentProcTab);
   const groups = [];
   list.forEach(p => {
@@ -1262,10 +1318,17 @@ function renderProc() {
   groups.forEach(g => {
     const collapsed = collapsedProcUnits.has(g.unit);
     html += '<tr class="proc-group" data-unit="' + esc(g.unit) + '">' +
-      '<td colspan="11">' +
-        '<span class="expand-caret">' + (collapsed ? '▸' : '▾') + '</span> ' +
-        '<span class="g-unit">' + esc(g.unit) + '</span>' +
-        '<span class="g-count">' + g.items.length + ' 项需求</span>' +
+      '<td colspan="11"><div class="g-row">' +
+        '<span class="g-left">' +
+          '<span class="expand-caret">' + (collapsed ? '▸' : '▾') + '</span> ' +
+          '<span class="g-unit">' + esc(g.unit) + '</span>' +
+          '<span class="g-count">' + g.items.length + ' 项需求</span>' +
+        '</span>' +
+        '<span class="g-ops">' +
+          '<button type="button" class="btn btn-ghost btn-xs" data-g-add title="在该部门下新增子需求">＋ 子需求</button>' +
+          '<button type="button" class="btn btn-ghost btn-xs" data-g-rename title="重命名该部门">重命名</button>' +
+          '<button type="button" class="btn btn-danger-ghost btn-xs" data-g-del title="删除该部门及其全部需求">删除</button>' +
+        '</span></div>' +
       '</td>' +
     '</tr>';
     if (!collapsed) {
@@ -1311,6 +1374,9 @@ function openProcModal(p) {
   $('#f-proc-cat').value = p ? p.category : currentProcTab;
   $('#f-proc-name').value = p ? p.name : '';
   $('#f-proc-unit').value = p ? p.unit : '';
+  $('#f-proc-unit').readOnly = false;          // 解除组内添加的单位锁定
+  $('#f-proc-unit').style.background = '';
+  $('#f-proc-unit').title = '';
   $('#f-proc-service').value = p ? p.service : '';
   $('#f-proc-region').value = p ? p.region : '';
   $('#f-proc-freq').value = p ? p.freq : '';

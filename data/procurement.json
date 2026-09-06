@@ -94,5 +94,41 @@
     "budget": null,
     "follow": "",
     "remark": ""
+  },
+  {
+    "id": "mtp8vkfw-4jdozo",
+    "category": "已落地",
+    "name": "老旧小区改造进度航拍跟踪",
+    "unit": "住建局",
+    "service": "改造地块施工进度航拍记录与对比",
+    "region": "10 个老旧小区",
+    "freq": "每月两次",
+    "budget": 45,
+    "follow": "",
+    "remark": ""
+  },
+  {
+    "id": "mtp8vl9i-dtuha5",
+    "category": "已落地",
+    "name": "渣土车运输路线巡查",
+    "unit": "住建局",
+    "service": "重点路段渣土车运输违规行为航拍取证",
+    "region": "3 条主干道",
+    "freq": "每周一次",
+    "budget": null,
+    "follow": "",
+    "remark": ""
+  },
+  {
+    "id": "mtp8vm34-x8e095",
+    "category": "已落地",
+    "name": "绿化带违规占用识别",
+    "unit": "住建局",
+    "service": "绿化带占用、毁绿种菜等行为识别上报",
+    "region": "中心城区",
+    "freq": "每月一次",
+    "budget": 30,
+    "follow": "",
+    "remark": ""
   }
 ]
