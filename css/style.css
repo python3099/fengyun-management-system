@@ -259,20 +259,21 @@ select { cursor: pointer; }
 /* 格内待办：负责人以醒目芯片逐行展示，超出滚动 */
 .cal-todos { flex: 1; min-height: 0; overflow-y: auto; overflow-x: hidden; margin-top: 5px; scrollbar-width: thin; display: flex; flex-wrap: wrap; gap: 4px; align-content: flex-start; }
 .cal-todo-line {
-  font-size: 15px; font-weight: 600; color: #1E40AF;
-  line-height: 1.5; padding: 0;
-  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-  max-width: 100%;
+  font-size: 13.5px; line-height: 1.7; padding: 0 2px;
+  display: flex; align-items: center; gap: 5px; min-width: 0;
 }
+.tl-person { color: #1E40AF; font-weight: 600; flex-shrink: 0; transition: all .15s; }
+.tl-text { color: #475569; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
+.cal-todo-line:hover .tl-text { color: #1D4ED8; }
 .cal-todo-line { transition: transform .18s, box-shadow .18s; }
-.cal-todo-line:hover { color: #2563EB; text-decoration: underline; }
+.cal-todo-line:hover .tl-text { color: #1D4ED8; }
+.cal-todo-line:hover .tl-person { text-decoration: underline; }
 /* 人员筛选命中/未命中样式 */
-.cal-todo-line.hl {
-  color: #1D4ED8; font-weight: 700;
-  transform: scale(1.1);
-  text-shadow: 0 2px 6px rgba(37, 99, 235, .35);
-  background: #fff; border-radius: 6px;
-  box-shadow: 0 6px 14px -6px rgba(37, 99, 235, .5), 0 0 0 1px rgba(59, 130, 246, .35);
+.cal-todo-line.hl { background: rgba(59, 130, 246, .05); }
+.cal-todo-line.hl .tl-person {
+  font-size: 15.5px; color: #2563EB; font-weight: 700;
+  background: rgba(59, 130, 246, .14); padding: 0 6px; border-radius: 5px;
+  text-decoration: underline;
 }
 .cal-todo-line.dim { opacity: .22; }
 /* 人员图例行 */
@@ -304,8 +305,9 @@ select { cursor: pointer; }
 .cal-cell.selected:hover { background: var(--grad); }
 .cal-cell.selected .cal-day { color: #fff; }
 .cal-cell.selected .cal-day.day-red { color: #FFD9D9; }
-.cal-cell.selected .cal-todo-line { color: #fff; background: rgba(255, 255, 255, .2); }
-.cal-cell.selected .cal-todo-line:hover { background: rgba(255, 255, 255, .34); color: #fff; }
+.cal-cell.selected .tl-person { color: #fff; }
+.cal-cell.selected .tl-text { color: rgba(255, 255, 255, .85); }
+.cal-cell.selected .cal-todo-line:hover .tl-text { color: #fff; }
 .cal-cell.selected.cal-match { box-shadow: 0 10px 22px -10px rgba(59, 99, 246, .8), 0 0 0 2px rgba(96, 165, 250, .55); }
 
 /* ---------- 当日待办管理弹窗 ---------- */

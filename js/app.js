@@ -7,7 +7,7 @@
      3. local  - 浏览器本地模式：localStorage（兜底方案，始终作为镜像缓存）
    ========================================================= */
 
-const APP_VERSION = '1.7.1';
+const APP_VERSION = '1.7.2';
 
 /* =========================================================
    工具函数
@@ -649,7 +649,10 @@ function renderCalendar() {
       if (hit) hasFiltered = true;
       const cls = personFilter ? (hit ? ' hl' : ' dim') : '';
       return '<div class="cal-todo-line' + cls + '" data-person="' + esc(t.person) +
-        '" title="点击查看 ' + esc(t.person) + ' 本月待办">' + esc(t.person) + '</div>';
+        '" title="点击查看 ' + esc(t.person) + ' 本月待办｜' + esc(t.content) + (t.remark ? '（备注：' + esc(t.remark) + '）' : '') + '">' +
+          '<span class="tl-person">' + esc(t.person) + '</span>' +
+          '<span class="tl-text">' + esc(t.content) + '</span>' +
+        '</div>';
     }).join('');
     if (hasFiltered) cell.classList.add('cell-hl');
 
