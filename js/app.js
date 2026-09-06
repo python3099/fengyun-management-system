@@ -7,7 +7,7 @@
      3. local  - 浏览器本地模式：localStorage（兜底方案，始终作为镜像缓存）
    ========================================================= */
 
-const APP_VERSION = '1.6.0';
+const APP_VERSION = '1.6.1';
 
 /* =========================================================
    工具函数
@@ -1213,13 +1213,12 @@ function bindProcEvents() {
       });
       return;
     }
-    /* 部门分组行：添加子需求 / 重命名部门 / 删除部门 / 展开收起 */
+    /* 部门分组行：添加子需求 / 重命名部门 / 展开收起 */
     const groupHead = e.target.closest('.proc-group');
     if (groupHead) {
       const unit = groupHead.dataset.unit;
       if (e.target.closest('[data-g-add]')) { openProcModalForUnit(unit); return; }
       if (e.target.closest('[data-g-rename]')) { openUnitRename(unit); return; }
-      if (e.target.closest('[data-g-del]')) { deleteUnitGroup(unit); return; }
       if (collapsedProcUnits.has(unit)) collapsedProcUnits.delete(unit); else collapsedProcUnits.add(unit);
       renderProc();
       return;
@@ -1284,20 +1283,6 @@ function saveUnitRename() {
   toast('已重命名为「' + name + '」，同步更新 ' + n + ' 项需求');
 }
 
-/* 删除整个部门分组：其下所有需求（含其他清单分类）一并删除 */
-function deleteUnitGroup(unit) {
-  const all = procs.filter(p => p.unit === unit);
-  if (!all.length) return;
-  const byCat = {};
-  all.forEach(p => { byCat[p.category] = (byCat[p.category] || 0) + 1; });
-  const detail = Object.keys(byCat).map(c => c + ' ' + byCat[c] + ' 项').join('、');
-  confirmDialog('确定要删除部门「' + unit + '」吗？其下全部 ' + all.length + ' 项需求（' + detail + '）将一并删除，不可恢复。', () => {
-    procs = procs.filter(p => p.unit !== unit);
-    saveProcs(); renderProc();
-    toast('部门「' + unit + '」及其需求已删除');
-  });
-}
-
 function renderProc() {
   const counts = {};
   procs.forEach(p => { counts[p.category] = (counts[p.category] || 0) + 1; });
@@ -1305,7 +1290,7 @@ function renderProc() {
     t.classList.toggle('active', t.dataset.tab === currentProcTab);
     t.querySelector('.tab-count').textContent = counts[t.dataset.tab] || 0;
   });
-  /* 按单位/部门分组展示：分组头（可添加子需求/重命名/删除）+ 组内子需求 1. 2. 3. */
+  /* 按单位/部门分组展示：分组头（可添加子需求/重命名）+ 组内子需求；子需求全部删除后分组自动消失 */
   const list = procs.filter(p => p.category === currentProcTab);
   const groups = [];
   list.forEach(p => {
@@ -1318,7 +1303,7 @@ function renderProc() {
   groups.forEach(g => {
     const collapsed = collapsedProcUnits.has(g.unit);
     html += '<tr class="proc-group" data-unit="' + esc(g.unit) + '">' +
-      '<td colspan="11"><div class="g-row">' +
+      '<td colspan="9"><div class="g-row">' +
         '<span class="g-left">' +
           '<span class="expand-caret">' + (collapsed ? '▸' : '▾') + '</span> ' +
           '<span class="g-unit">' + esc(g.unit) + '</span>' +
@@ -1327,34 +1312,30 @@ function renderProc() {
         '<span class="g-ops">' +
           '<button type="button" class="btn btn-ghost btn-xs" data-g-add title="在该部门下新增子需求">＋ 子需求</button>' +
           '<button type="button" class="btn btn-ghost btn-xs" data-g-rename title="重命名该部门">重命名</button>' +
-          '<button type="button" class="btn btn-danger-ghost btn-xs" data-g-del title="删除该部门及其全部需求">删除</button>' +
         '</span></div>' +
       '</td>' +
     '</tr>';
     if (!collapsed) {
-      g.items.forEach((p, gi) => { html += procRowHTML(p, ++seq, gi + 1); });
+      g.items.forEach(p => { html += procRowHTML(p, ++seq); });
     }
   });
   $('#proc-tbody').innerHTML = html;
   $('#proc-empty').style.display = list.length ? 'none' : '';
 }
 
-function procRowHTML(p, seq, childNo) {
+function procRowHTML(p, seq) {
   const danger = p.category === '未对接';
   const expanded = expandedProcIds.has(p.id);
   return '<tr data-id="' + p.id + '" class="' + (danger ? 'row-danger' : '') + (expanded ? ' tr-expanded' : '') + '">' +
     '<td>' + seq + '</td>' +
     '<td class="drag-handle" title="按住拖动调整顺序（组内）">⋮⋮</td>' +
-    '<td class="td-title"><span class="expand-caret">' + (expanded ? '▾' : '▸') + '</span> ' + esc(p.unit) +
-      (danger ? ' <span class="tag tag-red">重点关注</span>' : '') + '</td>' +
-    '<td><span class="g-child-no">' + childNo + '.</span> ' + esc(p.name) + '</td>' +
+    '<td class="td-title"><span class="expand-caret">' + (expanded ? '▾' : '▸') + '</span> ' + esc(p.name) +
+      (danger ? ' <span class="tag tag-red">重点关注</span>' : '') +
+      (p.category !== '已落地' && p.follow ? ' <span class="tag ' + (FOLLOW_CLASS[p.follow] || 'tag-gray') + '">' + esc(p.follow) + '</span>' : '') + '</td>' +
     '<td class="td-wrap td-clamp">' + esc(p.service) + '</td>' +
     '<td>' + esc(p.region) + '</td>' +
     '<td>' + esc(p.freq) + '</td>' +
     '<td>' + (p.budget != null ? formatNum(p.budget) : '待定') + '</td>' +
-    '<td>' + (p.category !== '已落地'
-      ? '<span class="tag ' + (FOLLOW_CLASS[p.follow] || 'tag-gray') + '">' + esc(p.follow || '—') + '</span>'
-      : '—') + '</td>' +
     '<td class="td-wrap td-clamp">' + (p.remark ? esc(p.remark) : '—') + '</td>' +
     '<td class="td-ops">' +
       '<button class="btn btn-ghost btn-xs" data-edit-proc="' + p.id + '">编辑</button>' +

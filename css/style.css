@@ -249,12 +249,13 @@ select { cursor: pointer; }
 /* 人员筛选命中的格子 */
 .cal-cell.cell-hl { border-color: rgba(59, 130, 246, .55); background: #F0F6FF; box-shadow: inset 0 0 0 1px rgba(147, 197, 253, .7); }
 /* 格内待办：负责人以醒目芯片逐行展示，超出滚动 */
-.cal-todos { flex: 1; min-height: 0; overflow-y: auto; margin-top: 3px; scrollbar-width: thin; }
+.cal-todos { flex: 1; min-height: 0; overflow-y: auto; margin-top: 5px; scrollbar-width: thin; display: flex; flex-wrap: wrap; gap: 4px; align-content: flex-start; }
 .cal-todo-line {
-  font-size: 13.5px; font-weight: 500; color: #1E40AF;
+  font-size: 20px; font-weight: 600; color: #1E40AF;
   background: rgba(59, 130, 246, .10);
-  line-height: 1.8; padding: 0 8px; margin-bottom: 2px;
-  white-space: nowrap; overflow: hidden; text-overflow: ellipsis; border-radius: 6px;
+  line-height: 1.4; padding: 2px 8px;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis; border-radius: 9px;
+  max-width: 100%;
 }
 .cal-todo-line:hover { background: #2563EB; color: #fff; }
 /* 人员筛选命中/未命中样式 */
@@ -419,7 +420,7 @@ select { cursor: pointer; }
 .data-table tbody tr:hover { background: #F4F8FF; }
 .data-table tbody tr:last-child td { border-bottom: none; }
 .td-title { font-weight: 600; color: var(--ink); }
-.td-wrap { min-width: 170px; max-width: 260px; word-break: break-all; }
+.td-wrap { min-width: 140px; max-width: 250px; word-break: break-all; }
 .td-time { white-space: nowrap; color: var(--ink-3); font-size: 12.5px; }
 .td-ops { white-space: nowrap; }
 .td-ops .btn + .btn { margin-left: 6px; }
@@ -442,9 +443,9 @@ select { cursor: pointer; }
 
 /* 表头内嵌筛选下拉（进度卡点） */
 .th-filter {
-  width: auto; min-width: 86px; padding: 3.5px 8px; font-size: 12.5px; font-weight: 500;
-  border-radius: 8px; border: 1px solid rgba(15, 23, 42, .14);
-  background: rgba(255, 255, 255, .8); color: var(--ink-2); margin-left: 6px;
+  width: auto; min-width: 72px; max-width: 96px; padding: 3px 5px; font-size: 12px; font-weight: 500;
+  border-radius: 7px; border: 1px solid rgba(15, 23, 42, .14);
+  background: rgba(255, 255, 255, .8); color: var(--ink-2); margin-left: 5px;
 }
 .th-filter:hover { border-color: rgba(59, 130, 246, .55); }
 .th-filter:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(59, 130, 246, .14); }
@@ -467,6 +468,19 @@ select { cursor: pointer; }
 .proc-tab.active .tab-count { background: rgba(255, 255, 255, .25); color: #fff; }
 .proc-tab.tab-danger .tab-count { background: rgba(239, 68, 68, .14); color: #B91C1C; }
 .proc-tab.tab-danger.active .tab-count { background: rgba(255, 255, 255, .25); color: #fff; }
+
+/* 进度卡点：列宽收紧 —— 拖拽把手紧挨序号，部门/负责人/状态窄列，进展情况保持宽 */
+.data-table:has(#blocker-tbody) th:nth-child(1) { width: 46px; }
+.data-table:has(#blocker-tbody) th:nth-child(2) { width: 26px; }
+.data-table:has(#blocker-tbody) th:nth-child(3) { width: 108px; }
+.data-table:has(#blocker-tbody) th:nth-child(6) { width: 88px; }
+.data-table:has(#blocker-tbody) th:nth-child(8) { width: 92px; }
+.data-table:has(#blocker-tbody) th,
+.data-table:has(#blocker-tbody) td { padding-left: 10px; padding-right: 10px; }
+.data-table:has(#blocker-tbody) td.td-ops .btn { padding: 4px 8px; }
+.data-table:has(#blocker-tbody) td:nth-child(3),
+.data-table:has(#blocker-tbody) td:nth-child(6),
+.data-table:has(#blocker-tbody) td:nth-child(8) { white-space: nowrap; }
 
 /* 进度卡点：部门/负责人/状态三列内容居中（含表头筛选下拉） */
 .data-table:has(#blocker-tbody) th:nth-child(3),
