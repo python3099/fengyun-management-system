@@ -16,7 +16,7 @@ const os = require('os');
 const ROOT = __dirname;
 const DATA_DIR = path.join(ROOT, 'data');
 const PORT = process.env.PORT || 8080;
-const VERSION = '1.3.0';
+const VERSION = '1.4.0';
 
 /* 允许通过 API 读写的模块白名单（与前端 MODULES 对应） */
 const MODULE_FILES = {

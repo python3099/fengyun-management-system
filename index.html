@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>广东丰云智能科技有限公司管理系统</title>
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 48'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop offset='0' stop-color='%233B82F6'/%3E%3Cstop offset='1' stop-color='%231D4ED8'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='48' height='48' rx='11' fill='url(%23g)'/%3E%3Cg stroke='%23fff' stroke-width='2.6' fill='none' stroke-linecap='round'%3E%3Ccircle cx='12' cy='12' r='4.2'/%3E%3Ccircle cx='36' cy='12' r='4.2'/%3E%3Ccircle cx='12' cy='36' r='4.2'/%3E%3Ccircle cx='36' cy='36' r='4.2'/%3E%3Cpath d='M15 15l5.5 5.5M33 15l-5.5 5.5M15 33l5.5-5.5M33 33l-5.5-5.5'/%3E%3C/g%3E%3Ccircle cx='24' cy='24' r='3.4' fill='%23fff'/%3E%3C/svg%3E">
+<meta name="theme-color" content="#0F172A">
 <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
@@ -28,10 +29,10 @@
 <!-- ===================== 侧边菜单栏 ===================== -->
 <aside class="sidebar">
   <nav class="menu">
-    <button class="menu-item active" data-page="todo"><span class="mi-icon">📋</span><span class="mi-text">日常待办</span></button>
-    <button class="menu-item" data-page="ops"><span class="mi-icon">📊</span><span class="mi-text">运营情况</span></button>
-    <button class="menu-item" data-page="blocker"><span class="mi-icon">🚧</span><span class="mi-text">进度卡点</span></button>
-    <button class="menu-item" data-page="proc"><span class="mi-icon">📈</span><span class="mi-text">来年统采</span></button>
+    <button class="menu-item active" data-page="todo"><span class="mi-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4.5" width="18" height="16" rx="3"/><path d="M8 2.5v4M16 2.5v4M3 9.5h18"/></svg></span><span class="mi-text">日常待办</span></button>
+    <button class="menu-item" data-page="ops"><span class="mi-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 20v-6M11 20V6M17 20v-9"/><path d="M3 20h18"/></svg></span><span class="mi-text">运营情况</span></button>
+    <button class="menu-item" data-page="blocker"><span class="mi-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/><path d="M12 9v4M12 17h.01"/></svg></span><span class="mi-text">进度卡点</span></button>
+    <button class="menu-item" data-page="proc"><span class="mi-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 17l6-6 4 4 8-8"/><path d="M14 7h7v7"/></svg></span><span class="mi-text">来年统采</span></button>
   </nav>
   <div class="sidebar-foot">广东丰云智能科技有限公司<br>内部管理系统 · <span id="app-version"></span></div>
 </aside>
@@ -98,19 +99,19 @@
     <!-- 公司总体概览：四个核心指标（服务部门数居首） -->
     <div class="stat-grid">
       <div class="stat-card">
-        <div class="stat-icon icon-purple">🏢</div>
+        <div class="stat-icon icon-purple"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M9 7h2M13 7h2M9 11h2M13 11h2M10 21v-4h4v4"/></svg></div>
         <div><div class="stat-label">服务部门（个）</div><div class="stat-value" id="stat-depts">0</div></div>
       </div>
       <div class="stat-card">
-        <div class="stat-icon icon-blue">💼</div>
+        <div class="stat-icon icon-blue"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="7" width="18" height="13" rx="2.5"/><path d="M9 7V5.5A1.5 1.5 0 0 1 10.5 4h3A1.5 1.5 0 0 1 15 5.5V7M3 13h18"/></svg></div>
         <div><div class="stat-label">合同总额（万元）</div><div class="stat-value" id="stat-contract">0</div></div>
       </div>
       <div class="stat-card">
-        <div class="stat-icon icon-green">🚁</div>
+        <div class="stat-icon icon-green"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="5.5" cy="5.5" r="2.4"/><circle cx="18.5" cy="5.5" r="2.4"/><circle cx="5.5" cy="18.5" r="2.4"/><circle cx="18.5" cy="18.5" r="2.4"/><path d="M7.2 7.2l3 3M16.8 7.2l-3 3M7.2 16.8l3-3M16.8 16.8l-3-3"/><circle cx="12" cy="12" r="1.6" fill="currentColor" stroke="none"/></svg></div>
         <div><div class="stat-label">2026年总巡飞次数</div><div class="stat-value" id="stat-patrol">0</div></div>
       </div>
       <div class="stat-card">
-        <div class="stat-icon icon-orange">🔍</div>
+        <div class="stat-icon icon-orange"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.8-3.8"/></svg></div>
         <div><div class="stat-label">总发现问题数（件）</div><div class="stat-value" id="stat-problem">0</div></div>
       </div>
     </div>
