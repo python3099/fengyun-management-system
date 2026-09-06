@@ -1,6 +1,6 @@
 {
   "name": "fengyun-management-system",
-  "version": "1.2.0",
+  "version": "1.3.0",
   "private": true,
   "description": "广东丰云智能科技有限公司管理系统（纯前端 SPA + 可选 Node 数据服务）",
   "scripts": {

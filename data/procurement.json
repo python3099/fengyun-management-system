@@ -24,18 +24,6 @@
     "remark": "已完成现场踏勘"
   },
   {
-    "id": "mto8jfp3-4z6ej3",
-    "category": "已落地",
-    "name": "城市网格化巡查服务",
-    "unit": "城市治理事业部",
-    "service": "全市建成区网格化航拍巡查，覆盖违建、市容、环卫等问题采集",
-    "region": "全市 21 个街道",
-    "freq": "每周两次",
-    "budget": 320,
-    "follow": "",
-    "remark": "已签订年度服务合同"
-  },
-  {
     "id": "mto8jfp3-xx4pb4",
     "category": "已落地",
     "name": "水域生态监测服务",
@@ -46,6 +34,18 @@
     "budget": 280,
     "follow": "",
     "remark": "含月度数据报告"
+  },
+  {
+    "id": "mto8jfp3-4z6ej3",
+    "category": "已落地",
+    "name": "城市网格化巡查服务",
+    "unit": "城市治理事业部",
+    "service": "全市建成区网格化航拍巡查，覆盖违建、市容、环卫等问题采集",
+    "region": "全市 21 个街道",
+    "freq": "每周两次",
+    "budget": 320,
+    "follow": "",
+    "remark": "已签订年度服务合同"
   },
   {
     "id": "mto8jfp3-wcp53c",

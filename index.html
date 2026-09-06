@@ -95,8 +95,12 @@
       <button class="btn btn-primary" id="btn-add-dept">＋ 添加部门数据</button>
     </div>
 
-    <!-- 公司总体概览：四个核心指标 -->
+    <!-- 公司总体概览：四个核心指标（服务部门数居首） -->
     <div class="stat-grid">
+      <div class="stat-card">
+        <div class="stat-icon icon-purple">🏢</div>
+        <div><div class="stat-label">服务部门（个）</div><div class="stat-value" id="stat-depts">0</div></div>
+      </div>
       <div class="stat-card">
         <div class="stat-icon icon-blue">💼</div>
         <div><div class="stat-label">合同总额（万元）</div><div class="stat-value" id="stat-contract">0</div></div>
@@ -108,10 +112,6 @@
       <div class="stat-card">
         <div class="stat-icon icon-orange">🔍</div>
         <div><div class="stat-label">总发现问题数（件）</div><div class="stat-value" id="stat-problem">0</div></div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-icon icon-purple">📁</div>
-        <div><div class="stat-label">合同总数（份）</div><div class="stat-value" id="stat-project">0</div></div>
       </div>
     </div>
 
@@ -130,14 +130,20 @@
     </div>
 
     <div class="card table-card">
+      <div class="filter-bar">
+        <label>部门<select id="filter-blk-dept"></select></label>
+        <label>负责人<select id="filter-blk-person"></select></label>
+        <label>状态<select id="filter-blk-status"></select></label>
+        <span class="filter-tip">按住行首 ⋮⋮ 上下拖动可调整顺序</span>
+      </div>
       <div class="table-wrap">
         <table class="data-table drag-table">
           <thead>
             <tr>
               <th>序号</th>
               <th class="th-drag"></th>
-              <th>问题/事项名称</th>
               <th>所属部门</th>
+              <th>问题/事项名称</th>
               <th>进展情况</th>
               <th>负责人</th>
               <th>需协助事项</th>
@@ -158,7 +164,7 @@
     <div class="page-head">
       <div>
         <h2>来年统采</h2>
-        <p class="page-sub">2027 年度统一采购需求分类跟进清单，未对接需求为重点关注事项，表格行可拖拽调整顺序</p>
+        <p class="page-sub">2027 年度统一采购需求分类跟进清单，未对接需求为重点关注；行首 ⋮⋮ 拖拽排序，点击行展开/收缩详情</p>
       </div>
       <button class="btn btn-primary" id="btn-add-proc">＋ 添加需求</button>
     </div>
@@ -177,8 +183,8 @@
             <tr>
               <th>序号</th>
               <th class="th-drag"></th>
+              <th>对应单位/部门</th>
               <th>需求名称</th>
-              <th>对应单位</th>
               <th>服务需求描述</th>
               <th>区域</th>
               <th>频次</th>

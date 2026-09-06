@@ -7,7 +7,7 @@
      3. local  - 浏览器本地模式：localStorage（兜底方案，始终作为镜像缓存）
    ========================================================= */
 
-const APP_VERSION = '1.2.0';
+const APP_VERSION = '1.3.0';
 
 /* =========================================================
    工具函数
@@ -550,6 +550,7 @@ function bindNav() {
    ========================================================= */
 let calY, calM;             // 当前日历显示的年/月
 let selectedDate;           // 当前选中的日期（YYYY-MM-DD）
+let personFilter = '';      // 本月人员筛选（空 = 不筛选；选中后仅高亮该人的待办）
 let editTodoDate = '';      // 正在编辑的待办所属日期
 let editTodoId = '';        // 正在编辑的待办 id
 
@@ -591,7 +592,8 @@ function shiftMonth(delta) {
 }
 
 /* 渲染月视图日历：周末/法定假日红字，假日淡红底+"休"，调休日"班"；
-   格内逐行显示当日待办负责人，行数过多时格子内滚动 */
+   格内逐行显示当日待办负责人，行数过多时格子内滚动；
+   支持按本月人员筛选：点图例后仅高亮该人的待办，其余淡出 */
 function renderCalendar() {
   $('#cal-title').textContent = calY + '年' + (calM + 1) + '月';
   const grid = $('#cal-grid');
@@ -599,6 +601,7 @@ function renderCalendar() {
   const offset = (new Date(calY, calM, 1).getDay() + 6) % 7;   // 当月 1 号相对周一的偏移
   const startDate = new Date(calY, calM, 1 - offset);
   const todayStr = fmtDate(new Date());
+  const personCounts = {};   // 本月各人员待办数（用于图例）
   for (let i = 0; i < 42; i++) {
     const d = new Date(startDate.getFullYear(), startDate.getMonth(), startDate.getDate() + i);
     const key = fmtDate(d);
@@ -607,6 +610,9 @@ function renderCalendar() {
     const isRest = !!(hol && hol.type === 'rest');
     const isWork = !!(hol && hol.type === 'work');
     const dayList = todos[key] || [];
+    if (d.getMonth() === calM) {
+      dayList.forEach(t => { personCounts[t.person] = (personCounts[t.person] || 0) + 1; });
+    }
 
     const cell = document.createElement('div');
     cell.className = 'cal-cell';
@@ -620,9 +626,14 @@ function renderCalendar() {
     const badge = isRest ? '<span class="day-badge badge-rest" title="' + esc(hol.name) + '">休</span>'
                 : isWork ? '<span class="day-badge badge-work" title="' + esc(hol.name) + '调休，这天要上班">班</span>'
                 : '';
-    const lines = dayList.map(t =>
-      '<div class="cal-todo-line" title="' + esc(t.person) + '：' + esc(t.content) + '">' + esc(t.person) + '</div>'
-    ).join('');
+    let hasFiltered = false;
+    const lines = dayList.map(t => {
+      const hit = personFilter && t.person === personFilter;
+      if (hit) hasFiltered = true;
+      const cls = personFilter ? (hit ? ' hl' : ' dim') : '';
+      return '<div class="cal-todo-line' + cls + '" title="' + esc(t.person) + '：' + esc(t.content) + '">' + esc(t.person) + '</div>';
+    }).join('');
+    if (hasFiltered) cell.classList.add('cell-hl');
 
     cell.innerHTML =
       '<div class="cal-cell-head"><span class="cal-day' + redDay + '">' + d.getDate() + '</span>' + badge + '</div>' +
@@ -635,6 +646,40 @@ function renderCalendar() {
     });
     grid.appendChild(cell);
   }
+
+  /* 筛选的人员在本月已无待办时自动取消筛选 */
+  if (personFilter && !personCounts[personFilter]) personFilter = '';
+  renderPersonLegend(personCounts);
+}
+
+/* 渲染本月人员图例（点击筛选，再点取消） */
+function renderPersonLegend(personCounts) {
+  let row = $('#cal-persons');
+  if (!row) {   // 日历卡片内动态创建图例容器
+    row = document.createElement('div');
+    row.className = 'cal-persons';
+    row.id = 'cal-persons';
+    $('.calendar-card').insertBefore(row, $('.cal-week-header'));
+  }
+  const persons = Object.keys(personCounts).sort((a, b) => personCounts[b] - personCounts[a] || a.localeCompare(b, 'zh'));
+  row.innerHTML = persons.length
+    ? '<span class="cp-label">按人员筛选：</span>' + persons.map(p =>
+        '<button type="button" class="person-chip' + (personFilter === p ? ' active' : '') + '" data-person="' + esc(p) + '">' +
+          esc(p) + '<b>' + personCounts[p] + '</b></button>'
+      ).join('') + (personFilter ? '<button type="button" class="person-chip cp-clear" data-person="">× 取消筛选</button>' : '')
+    : '';
+}
+function bindPersonLegend() {
+  /* 事件委托绑定在静态存在的日历卡片上：
+     图例容器 #cal-persons 是 renderCalendar 时动态创建的，
+     若直接对它绑定会在首次初始化时因元素尚不存在而报错 */
+  $('.calendar-card').addEventListener('click', e => {
+    const chip = e.target.closest('.person-chip');
+    if (!chip) return;
+    const p = chip.dataset.person;
+    personFilter = (personFilter === p) ? '' : p;
+    renderCalendar();
+  });
 }
 
 /* 渲染选中日期的待办面板 */
@@ -738,23 +783,22 @@ function renderOps() {
   const sumAmount = depts.reduce((s, d) => s + deptTotals(d).amount, 0);
   const sumPatrol = depts.reduce((s, d) => s + deptTotals(d).patrol, 0);
   const sumProblems = depts.reduce((s, d) => s + deptTotals(d).problems, 0);
-  const sumContracts = depts.reduce((s, d) => s + deptTotals(d).count, 0);
+  $('#stat-depts').textContent = formatNum(depts.length);   // 服务部门数（统计卡首位）
   $('#stat-contract').textContent = formatNum(sumAmount);
   $('#stat-patrol').textContent   = formatNum(sumPatrol);
   $('#stat-problem').textContent  = formatNum(sumProblems);
-  $('#stat-project').textContent  = formatNum(sumContracts);
   const sorted = [...depts].sort((a, b) => deptTotals(b).amount - deptTotals(a).amount);
   $('#dept-grid').innerHTML = sorted.length
-    ? sorted.map(deptCardHTML).join('')
+    ? sorted.map((d, i) => deptCardHTML(d, i + 1)).join('')
     : '<div class="empty-state" style="grid-column:1/-1">暂无部门数据，点击右上角「添加部门数据」开始录入</div>';
 }
 
-function deptCardHTML(d) {
+function deptCardHTML(d, no) {
   const t = deptTotals(d);
-  const contractItems = (d.contracts || []).map(c => {
+  const contractItems = (d.contracts || []).map((c, ci) => {
     const cats = (c.cats || []).map(cat => '<span class="cat-chip">' + esc(cat.name) + '<b>' + formatNum(cat.count) + '</b></span>').join('');
     return '<div class="contract-item">' +
-      '<div class="ci-head"><span class="ci-name">' + esc(c.name) + '</span><span class="ci-amount">' + formatNum(c.amount) + ' 万元</span></div>' +
+      '<div class="ci-head"><span class="ci-name"><span class="ci-no">' + (ci + 1) + '.</span>' + esc(c.name) + '</span><span class="ci-amount">' + formatNum(c.amount) + ' 万元</span></div>' +
       (c.content ? '<div class="ci-content">' + esc(c.content) + '</div>' : '') +
       '<div class="ci-meta">' +
         '<span class="cat-chip">巡飞<b>' + formatNum(c.patrol) + '</b></span>' +
@@ -766,7 +810,7 @@ function deptCardHTML(d) {
   const catChips = t.cats.map(cat => '<span class="cat-chip">' + esc(cat.name) + '<b>' + formatNum(cat.count) + '</b></span>').join('');
   return '<div class="card dept-card">' +
     '<div class="dept-head">' +
-      '<div class="dept-name">' + esc(d.name) + '</div>' +
+      '<div class="dept-name"><span class="dept-no">' + no + '</span>' + esc(d.name) + '</div>' +
       '<div class="card-actions">' +
         '<button class="btn btn-ghost btn-xs" data-edit-dept="' + d.id + '">编辑</button>' +
         '<button class="btn btn-danger-ghost btn-xs" data-del-dept="' + d.id + '">删除</button>' +
@@ -894,12 +938,21 @@ function saveDept() {
    模块三：进度卡点（拖拽排序 + 未开始/进行中/待推进/已解决）
    ========================================================= */
 let editingBlockerId = null;
-let dragBlkId = null;
+let fBlkDept = '', fBlkPerson = '', fBlkStatus = '';   // 卡点三项筛选（空 = 全部）
 const BLK_STATUS_CLASS = { '未开始': 'tag-gray', '进行中': 'tag-blue', '待推进': 'tag-orange', '已解决': 'tag-green' };
 
 function bindBlockerEvents() {
   $('#btn-add-blocker').addEventListener('click', () => openBlockerModal(null));
   $('#f-blk-save').addEventListener('click', saveBlocker);
+
+  ['dept', 'person', 'status'].forEach(key => {
+    $('#filter-blk-' + key).addEventListener('change', e => {
+      if (key === 'dept') fBlkDept = e.target.value;
+      if (key === 'person') fBlkPerson = e.target.value;
+      if (key === 'status') fBlkStatus = e.target.value;
+      renderBlockers();
+    });
+  });
 
   $('#blocker-tbody').addEventListener('click', e => {
     const editBtn = e.target.closest('[data-edit-blk]');
@@ -916,69 +969,101 @@ function bindBlockerEvents() {
     }
   });
 
-  bindTableDrag('#blocker-tbody', {
-    getDragId: () => dragBlkId,
-    setDragId: id => { dragBlkId = id; },
-    reorder: (srcId, targetId) => reorderById(blockers, srcId, targetId),
-    onDrop: () => { saveBlockers(); renderBlockers(); toast('排序已保存'); }
+  /* 自定义指针拖拽：按住行首 ⋮⋮ 上下拖动，行实时跟随，松手即保存 */
+  enableRowDrag('#blocker-tbody', () => {
+    blockers = commitDomOrder($('#blocker-tbody'), blockers, isBlockerVisible);
+    saveBlockers(); renderBlockers();
+    toast('排序已保存');
   });
 }
 
-/* 在数组内把 srcId 项移动到 targetId 项之前 */
-function reorderById(arr, srcId, targetId) {
-  const from = arr.findIndex(x => x.id === srcId);
-  if (from < 0 || srcId === targetId) return false;
-  const [item] = arr.splice(from, 1);
-  let to = arr.findIndex(x => x.id === targetId);
-  if (to < 0) to = arr.length;
-  arr.splice(to, 0, item);
-  return true;
+/* 当前筛选条件下该卡点是否可见 */
+function isBlockerVisible(b) {
+  return (!fBlkDept || b.department === fBlkDept) &&
+         (!fBlkPerson || b.person === fBlkPerson) &&
+         (!fBlkStatus || b.status === fBlkStatus);
 }
 
-/* 通用表格行拖拽绑定（HTML5 Drag & Drop） */
-function bindTableDrag(tbodySel, opts) {
+/* 刷新三个筛选下拉的选项（保留当前选中值） */
+function refreshBlockerFilters() {
+  fillFilter('#filter-blk-dept', blockers.map(b => b.department), fBlkDept);
+  fillFilter('#filter-blk-person', blockers.map(b => b.person), fBlkPerson);
+  fillFilter('#filter-blk-status', ['未开始', '进行中', '待推进', '已解决'], fBlkStatus);
+}
+function fillFilter(sel, items, cur) {
+  const el = $(sel);
+  const uniq = [...new Set(items.filter(Boolean))];
+  el.innerHTML = '<option value="">全部</option>' + uniq.map(v =>
+    '<option value="' + esc(v) + '"' + (v === cur ? ' selected' : '') + '>' + esc(v) + '</option>'
+  ).join('');
+}
+
+/* 自定义表格行拖拽（指针实现，替代原生 HTML5 拖拽，不会被文本选择干扰） */
+/* 仅可从行首 ⋮⋮ 把手发起；移动中行实时跟随；松手后按 DOM 顺序回调落库 */
+function enableRowDrag(tbodySel, onCommit) {
   const tbody = $(tbodySel);
-  tbody.addEventListener('dragstart', e => {
-    const tr = e.target.closest('tr[data-id]');
+  let st = null;   // { tr, startY, moved }
+  tbody.addEventListener('mousedown', e => {
+    const handle = e.target.closest('.drag-handle');
+    if (!handle || e.button !== 0) return;
+    const tr = handle.closest('tr[data-id]');
     if (!tr) return;
-    opts.setDragId(tr.dataset.id);
-    tr.classList.add('dragging');
-    e.dataTransfer.effectAllowed = 'move';
-    try { e.dataTransfer.setData('text/plain', tr.dataset.id); } catch (_) { /* IE 兼容忽略 */ }
+    st = { tr, startY: e.clientY, moved: false };
+    e.preventDefault();   // 防止触发文本选择
   });
-  tbody.addEventListener('dragover', e => {
-    e.preventDefault();
-    e.dataTransfer.dropEffect = 'move';
-    const over = e.target.closest('tr[data-id]');
-    $$('tr', tbody).forEach(r => r.classList.remove('drag-over'));
-    if (over && over.dataset.id !== opts.getDragId()) over.classList.add('drag-over');
-  });
-  tbody.addEventListener('drop', e => {
-    e.preventDefault();
-    const over = e.target.closest('tr[data-id]');
-    if (over && opts.getDragId() && over.dataset.id !== opts.getDragId()) {
-      if (opts.reorder(opts.getDragId(), over.dataset.id) && opts.onDrop) opts.onDrop();
+  document.addEventListener('mousemove', e => {
+    if (!st) return;
+    /* 拖拽中的行已被移出表格（如中途被重新渲染）时放弃本次拖拽 */
+    if (!tbody.contains(st.tr)) { st = null; return; }
+    if (!st.moved && Math.abs(e.clientY - st.startY) < 4) return;
+    if (!st.moved) { st.moved = true; st.tr.classList.add('dragging'); document.body.style.cursor = 'grabbing'; }
+    const rect = tbody.getBoundingClientRect();
+    if (e.clientY < rect.top - 16 || e.clientY > rect.bottom + 16) return;
+    const others = [...tbody.querySelectorAll('tr[data-id]')].filter(r => r !== st.tr);
+    const target = others.find(r => {
+      const rc = r.getBoundingClientRect();
+      return e.clientY >= rc.top && e.clientY <= rc.bottom;
+    });
+    if (target) {
+      const rc = target.getBoundingClientRect();
+      tbody.insertBefore(st.tr, e.clientY < rc.top + rc.height / 2 ? target : target.nextSibling);
     }
   });
-  tbody.addEventListener('dragend', () => {
-    $$('tr', tbody).forEach(r => r.classList.remove('dragging', 'drag-over'));
-    opts.setDragId(null);
+  document.addEventListener('mouseup', () => {
+    if (!st) return;
+    const { tr, moved } = st;
+    st = null;
+    document.body.style.cursor = '';
+    tr.classList.remove('dragging');
+    if (moved) onCommit();
   });
 }
 
-/* 卡点拖拽落库（由通用拖拽回调触发） */
-function saveBlockersOrder() {
-  saveBlockers(); renderBlockers();
-  toast('排序已保存');
+/* 按当前 DOM 行顺序重排数组：可见行以 DOM 顺序为准，被筛选隐藏的行保持原相对位置。
+   任何不一致（行数不符、id 重复、缺失）都直接放弃本次排序，避免数据被破坏 */
+function commitDomOrder(tbody, arr, isVisible) {
+  const domIds = [...tbody.querySelectorAll('tr[data-id]')].map(r => r.dataset.id);
+  const visibleItems = arr.filter(isVisible);
+  const consistent = domIds.length === visibleItems.length &&
+    new Set(domIds).size === domIds.length &&
+    domIds.every(id => visibleItems.some(x => x.id === id));
+  if (!consistent) return arr;
+  const orderedVisible = domIds.map(id => visibleItems.find(x => x.id === id));
+  const result = [];
+  let di = 0;
+  arr.forEach(item => { result.push(isVisible(item) ? orderedVisible[di++] : item); });
+  return result;
 }
 
 function renderBlockers() {
-  $('#blocker-tbody').innerHTML = blockers.map((b, i) =>
+  refreshBlockerFilters();
+  const list = blockers.filter(isBlockerVisible);
+  $('#blocker-tbody').innerHTML = list.map((b, i) =>
     '<tr data-id="' + b.id + '">' +
       '<td>' + (i + 1) + '</td>' +
-      '<td class="drag-handle" title="拖拽调整顺序">⋮⋮</td>' +
-      '<td class="td-title">' + esc(b.title) + '</td>' +
+      '<td class="drag-handle" title="按住拖动调整顺序">⋮⋮</td>' +
       '<td>' + esc(b.department) + '</td>' +
+      '<td class="td-title">' + esc(b.title) + '</td>' +
       '<td class="td-wrap">' + esc(b.progress) + '</td>' +
       '<td>' + esc(b.person) + '</td>' +
       '<td class="td-wrap">' + (b.help ? esc(b.help) : '—') + '</td>' +
@@ -990,7 +1075,16 @@ function renderBlockers() {
       '</td>' +
     '</tr>'
   ).join('');
-  $('#blocker-empty').style.display = blockers.length ? 'none' : '';
+  const empty = $('#blocker-empty');
+  if (!blockers.length) {
+    empty.textContent = '暂无卡点记录，点击右上角「添加卡点」开始记录';
+    empty.style.display = '';
+  } else if (!list.length) {
+    empty.textContent = '没有符合筛选条件的卡点';
+    empty.style.display = '';
+  } else {
+    empty.style.display = 'none';
+  }
 }
 
 function openBlockerModal(b) {
@@ -1039,7 +1133,7 @@ function saveBlocker() {
    ========================================================= */
 let currentProcTab = '已落地';
 let editingProcId = null;
-let dragProcId = null;
+const expandedProcIds = new Set();   // 当前展开详情的需求行（点击行展开/收缩）
 const FOLLOW_CLASS = { '初步接触': 'tag-cyan', '方案编制中': 'tag-blue', '待报价': 'tag-orange', '待决策': 'tag-purple' };
 
 function bindProcEvents() {
@@ -1063,23 +1157,22 @@ function bindProcEvents() {
         saveProcs(); renderProc();
         toast('需求已删除');
       });
+      return;
     }
+    /* 点击行其他位置：展开/收缩详情（服务需求描述与备注） */
+    if (e.target.closest('.drag-handle')) return;
+    const tr = e.target.closest('tr[data-id]');
+    if (!tr) return;
+    const id = tr.dataset.id;
+    if (expandedProcIds.has(id)) expandedProcIds.delete(id); else expandedProcIds.add(id);
+    renderProc();
   });
 
-  bindTableDrag('#proc-tbody', {
-    getDragId: () => dragProcId,
-    setDragId: id => { dragProcId = id; },
-    reorder: (srcId, targetId) => {
-      /* 只在当前分类清单内部调整顺序 */
-      const list = procs.filter(p => p.category === currentProcTab);
-      if (reorderById(list, srcId, targetId)) {
-        const others = procs.filter(p => p.category !== currentProcTab);
-        procs = [...list, ...others];
-        return true;
-      }
-      return false;
-    },
-    onDrop: () => { saveProcs(); renderProc(); toast('排序已保存'); }
+  /* 自定义指针拖拽：仅在当前分类清单内部调整顺序 */
+  enableRowDrag('#proc-tbody', () => {
+    procs = commitDomOrder($('#proc-tbody'), procs, p => p.category === currentProcTab);
+    saveProcs(); renderProc();
+    toast('排序已保存');
   });
 }
 
@@ -1097,19 +1190,21 @@ function renderProc() {
 
 function procRowHTML(p, i) {
   const danger = p.category === '未对接';
-  return '<tr data-id="' + p.id + '" class="' + (danger ? 'row-danger' : '') + '">' +
+  const expanded = expandedProcIds.has(p.id);
+  return '<tr data-id="' + p.id + '" class="' + (danger ? 'row-danger' : '') + (expanded ? ' tr-expanded' : '') + '">' +
     '<td>' + (i + 1) + '</td>' +
-    '<td class="drag-handle" title="拖拽调整顺序">⋮⋮</td>' +
-    '<td class="td-title">' + esc(p.name) + (danger ? ' <span class="tag tag-red">重点关注</span>' : '') + '</td>' +
-    '<td>' + esc(p.unit) + '</td>' +
-    '<td class="td-wrap">' + esc(p.service) + '</td>' +
+    '<td class="drag-handle" title="按住拖动调整顺序">⋮⋮</td>' +
+    '<td class="td-title"><span class="expand-caret">' + (expanded ? '▾' : '▸') + '</span> ' + esc(p.unit) +
+      (danger ? ' <span class="tag tag-red">重点关注</span>' : '') + '</td>' +
+    '<td>' + esc(p.name) + '</td>' +
+    '<td class="td-wrap td-clamp">' + esc(p.service) + '</td>' +
     '<td>' + esc(p.region) + '</td>' +
     '<td>' + esc(p.freq) + '</td>' +
     '<td>' + (p.budget != null ? formatNum(p.budget) : '待定') + '</td>' +
     '<td>' + (p.category !== '已落地'
       ? '<span class="tag ' + (FOLLOW_CLASS[p.follow] || 'tag-gray') + '">' + esc(p.follow || '—') + '</span>'
       : '—') + '</td>' +
-    '<td class="td-wrap">' + (p.remark ? esc(p.remark) : '—') + '</td>' +
+    '<td class="td-wrap td-clamp">' + (p.remark ? esc(p.remark) : '—') + '</td>' +
     '<td class="td-ops">' +
       '<button class="btn btn-ghost btn-xs" data-edit-proc="' + p.id + '">编辑</button>' +
       '<button class="btn btn-danger-ghost btn-xs" data-del-proc="' + p.id + '">删除</button>' +
@@ -1243,6 +1338,7 @@ async function init() {
   tickClock();
   setInterval(tickClock, 1000);   // 顶栏时钟每秒刷新
 
+  bindPersonLegend();
   refreshDeptOptions();
   renderAllModules();
   updateDataUI();
