@@ -118,8 +118,16 @@ body { display: flow-root; }   /* 阻断 .main 外边距折叠出文档（顶栏
 .page.active { display: block; animation: pageIn .3s cubic-bezier(.22, .8, .36, 1); }
 @keyframes pageIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
 .page-head { display: flex; align-items: flex-end; justify-content: space-between; gap: 16px; margin-bottom: 20px; flex-wrap: wrap; }
-.page-head h2 { font-size: 22px; font-weight: 800; color: var(--ink); letter-spacing: -0.3px; }
-.page-sub { color: var(--ink-3); font-size: 13px; margin-top: 5px; }
+.page-head h2 {
+  font-size: 21px; font-weight: 800; color: var(--ink); letter-spacing: 0;
+  display: flex; align-items: center; gap: 10px; line-height: 1.3;
+}
+.page-head h2::before {
+  content: ""; width: 5px; height: 21px; border-radius: 3px; flex-shrink: 0;
+  background: linear-gradient(180deg, #3B82F6, #6366F1);
+  box-shadow: 0 4px 10px -3px rgba(59, 99, 246, .65);
+}
+.page-sub { color: var(--ink-3); font-size: 13px; margin-top: 6px; padding-left: 15px; }
 
 /* ---------- 通用卡片 ---------- */
 .card {
@@ -256,10 +264,16 @@ select { cursor: pointer; }
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
   max-width: 100%;
 }
+.cal-todo-line { transition: transform .18s, box-shadow .18s; }
 .cal-todo-line:hover { color: #2563EB; text-decoration: underline; }
 /* 人员筛选命中/未命中样式 */
-.cal-todo-line.hl { background: var(--grad); color: #fff; font-weight: 600; box-shadow: 0 3px 8px -3px rgba(59, 99, 246, .6); }
-.cal-todo-line.hl:hover { background: var(--grad-deep); color: #fff; }
+.cal-todo-line.hl {
+  color: #1D4ED8; font-weight: 700;
+  transform: scale(1.18) translateY(-1px);
+  text-shadow: 0 2px 6px rgba(37, 99, 235, .35);
+  background: #fff; border-radius: 6px;
+  box-shadow: 0 6px 14px -6px rgba(37, 99, 235, .5), 0 0 0 1px rgba(59, 130, 246, .35);
+}
 .cal-todo-line.dim { opacity: .22; }
 /* 人员图例行 */
 .cal-persons { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; padding: 0 0 12px; font-size: 12.5px; }
@@ -276,10 +290,11 @@ select { cursor: pointer; }
 }
 .person-chip:hover { color: #2563EB; border-color: rgba(59, 130, 246, .5); background: #F0F6FF; box-shadow: 0 4px 10px -5px rgba(37, 99, 235, .5); }
 .person-chip.active {
-  background: var(--grad); color: #fff; border-color: transparent;
-  box-shadow: 0 6px 14px -6px rgba(59, 99, 246, .7);
+  background: #fff; color: #1D4ED8; font-weight: 700;
+  border-color: #2563EB; border-width: 2px; padding: 2.5px 11.5px;
+  box-shadow: 0 4px 12px -4px rgba(37, 99, 235, .45);
 }
-.person-chip.active b { background: rgba(255, 255, 255, .26); color: #fff; }
+.person-chip.active b { background: #2563EB; color: #fff; }
 .person-chip.cp-clear { border-style: dashed; color: var(--ink-4); }
 .person-chip.cp-clear:hover { color: #DC2626; border-color: rgba(220, 38, 38, .4); background: #FEF2F2; box-shadow: none; }
 .cal-cell.selected {
