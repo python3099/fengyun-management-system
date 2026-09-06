@@ -6,10 +6,27 @@
 <title>广东丰云智能科技有限公司管理系统</title>
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 48'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop offset='0' stop-color='%233B82F6'/%3E%3Cstop offset='1' stop-color='%231D4ED8'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='48' height='48' rx='11' fill='url(%23g)'/%3E%3Cg stroke='%23fff' stroke-width='2.6' fill='none' stroke-linecap='round'%3E%3Ccircle cx='12' cy='12' r='4.2'/%3E%3Ccircle cx='36' cy='12' r='4.2'/%3E%3Ccircle cx='12' cy='36' r='4.2'/%3E%3Ccircle cx='36' cy='36' r='4.2'/%3E%3Cpath d='M15 15l5.5 5.5M33 15l-5.5 5.5M15 33l5.5-5.5M33 33l-5.5-5.5'/%3E%3C/g%3E%3Ccircle cx='24' cy='24' r='3.4' fill='%23fff'/%3E%3C/svg%3E">
 <meta name="theme-color" content="#0F172A">
-<link rel="stylesheet" href="css/style.css">
+<link rel="stylesheet" href="css/style.css?v=1.7.0">
 </head>
 <body>
 <noscript>本系统需要启用 JavaScript 才能使用，请在浏览器设置中允许运行脚本。</noscript>
+
+<!-- ===================== 登录页（未通过登录码时遮挡整个系统） ===================== -->
+<div id="login-screen">
+  <div class="login-card">
+    <div class="login-logo">
+      <svg viewBox="0 0 48 48" width="34" height="34" aria-hidden="true"><g stroke="#fff" stroke-width="2.6" fill="none" stroke-linecap="round"><circle cx="12" cy="12" r="4.2"/><circle cx="36" cy="12" r="4.2"/><circle cx="12" cy="36" r="4.2"/><circle cx="36" cy="36" r="4.2"/><path d="M15 15l5.5 5.5M33 15l-5.5 5.5M15 33l5.5-5.5M33 33l-5.5-5.5"/></g><circle cx="24" cy="24" r="3.4" fill="#fff"/></svg>
+    </div>
+    <h1 class="login-title">广东丰云智能科技有限公司</h1>
+    <p class="login-sub">内部管理系统 · 请输入登录码访问</p>
+    <form id="login-form" autocomplete="off">
+      <input type="password" id="login-code" placeholder="请输入登录码" autocomplete="off">
+      <button type="submit" class="btn btn-primary login-btn-submit">进 入 系 统</button>
+    </form>
+    <p class="login-error" id="login-error"></p>
+  </div>
+  <p class="login-foot">广东丰云智能科技有限公司 · 仅限内部使用</p>
+</div>
 
 <!-- ===================== 顶部导航栏 ===================== -->
 <header class="topbar">
@@ -22,7 +39,7 @@
   <div class="topbar-right">
     <span id="datetime">--</span>
     <button class="login-btn" id="data-btn" title="数据管理">💾 数据</button>
-    <button class="login-btn" id="login-btn" title="当前为免登录模式">👤 登录</button>
+    <button class="login-btn" id="login-btn" title="退出登录">⏻ 退出</button>
   </div>
 </header>
 
@@ -442,6 +459,6 @@
   </div>
 </div>
 
-<script src="js/app.js"></script>
+<script src="js/app.js?v=1.7.0"></script>
 </body>
 </html>

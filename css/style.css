@@ -727,3 +727,56 @@ select { cursor: pointer; }
   .sys-title { font-size: 12.5px; }
   .cal-grid { grid-template-rows: repeat(6, 58px); }
 }
+
+/* =========================================================
+   登录页（登录码访问控制）
+   ========================================================= */
+body.not-authed .topbar,
+body.not-authed .sidebar,
+body.not-authed .main { display: none !important; }
+#login-screen {
+  position: fixed; inset: 0; z-index: 500;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  background:
+    radial-gradient(1000px 500px at 75% -10%, rgba(99, 102, 241, .35), transparent 65%),
+    radial-gradient(800px 420px at 10% 110%, rgba(59, 130, 246, .3), transparent 65%),
+    linear-gradient(160deg, #0B1220, #101B33 55%, #1B2A4A);
+  transition: opacity .35s, visibility .35s;
+}
+#login-screen.login-out { opacity: 0; visibility: hidden; }
+.login-card {
+  width: min(400px, calc(100vw - 40px));
+  background: rgba(255, 255, 255, .97);
+  border-radius: 22px; padding: 42px 38px 30px;
+  text-align: center;
+  box-shadow: 0 40px 90px -30px rgba(2, 6, 23, .8), 0 0 0 1px rgba(255, 255, 255, .08);
+  animation: cardIn .5s cubic-bezier(.22, .8, .36, 1);
+}
+@keyframes cardIn { from { opacity: 0; transform: translateY(24px) scale(.97); } to { opacity: 1; transform: none; } }
+.login-card.shake { animation: shake .4s; }
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  20% { transform: translateX(-9px); }
+  40% { transform: translateX(8px); }
+  60% { transform: translateX(-6px); }
+  80% { transform: translateX(4px); }
+}
+.login-logo {
+  width: 62px; height: 62px; margin: 0 auto 18px; border-radius: 18px;
+  background: linear-gradient(135deg, #3B82F6, #6366F1);
+  display: flex; align-items: center; justify-content: center;
+  box-shadow: 0 0 0 1px rgba(255,255,255,.2) inset, 0 14px 30px -10px rgba(79, 70, 229, .7);
+}
+.login-title { font-size: 19px; font-weight: 800; color: var(--ink); letter-spacing: .5px; }
+.login-sub { color: var(--ink-3); font-size: 13px; margin: 8px 0 26px; }
+#login-form { display: flex; flex-direction: column; gap: 12px; }
+#login-code {
+  text-align: center; letter-spacing: 3px; font-size: 17px; font-weight: 600;
+  padding: 12px 14px;
+}
+.login-btn-submit { padding: 12px; font-size: 15px; letter-spacing: 4px; font-weight: 700; }
+.login-error { color: #DC2626; font-size: 12.5px; min-height: 18px; margin-top: 12px; font-weight: 500; }
+.login-foot {
+  position: absolute; bottom: 26px; left: 0; right: 0;
+  color: rgba(148, 163, 184, .5); font-size: 12px; text-align: center; letter-spacing: 1px;
+}

@@ -16,7 +16,7 @@ const os = require('os');
 const ROOT = __dirname;
 const DATA_DIR = path.join(ROOT, 'data');
 const PORT = process.env.PORT || 8080;
-const VERSION = '1.6.3';
+const VERSION = '1.7.0';
 
 /* 允许通过 API 读写的模块白名单（与前端 MODULES 对应） */
 const MODULE_FILES = {
@@ -103,7 +103,11 @@ function serveStatic(req, res, pathname) {
   if (!filePath.startsWith(ROOT)) { res.writeHead(403); return res.end('Forbidden'); }
   fs.readFile(filePath, (err, data) => {
     if (err) { res.writeHead(404, { 'Content-Type': 'text/plain; charset=utf-8' }); return res.end('Not Found: ' + urlPath); }
-    res.writeHead(200, { 'Content-Type': MIME[path.extname(filePath).toLowerCase()] || 'application/octet-stream' });
+    // 静态资源禁用缓存：系统更新后用户刷新即得最新版（配合前端登录门逻辑至关重要）
+    res.writeHead(200, {
+      'Content-Type': MIME[path.extname(filePath).toLowerCase()] || 'application/octet-stream',
+      'Cache-Control': 'no-cache, no-store, must-revalidate'
+    });
     res.end(data);
   });
 }

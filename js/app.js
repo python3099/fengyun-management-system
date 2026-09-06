@@ -7,7 +7,7 @@
      3. local  - 浏览器本地模式：localStorage（兜底方案，始终作为镜像缓存）
    ========================================================= */
 
-const APP_VERSION = '1.6.3';
+const APP_VERSION = '1.7.0';
 
 /* =========================================================
    工具函数
@@ -1456,7 +1456,54 @@ function renderAllModules() {
   renderProc();
 }
 
+/* =========================================================
+   登录门（登录码访问控制）
+   ========================================================= */
+const ACCESS_CODE = 'fy2026';
+const AUTH_KEY = 'fengyun_auth';
+const isAuthed = () => localStorage.getItem(AUTH_KEY) === '1';
+
+function bindLogin() {
+  document.body.classList.add('not-authed');
+  $('#login-form').addEventListener('submit', e => {
+    e.preventDefault();
+    const code = $('#login-code').value.trim();
+    const card = document.querySelector('.login-card');
+    if (code === ACCESS_CODE) {
+      localStorage.setItem(AUTH_KEY, '1');
+      document.body.classList.remove('not-authed');
+      const screen = $('#login-screen');
+      screen.classList.add('login-out');   // 淡出过渡
+      setTimeout(() => screen.remove(), 350);
+      initApp();
+      toast('欢迎回来', 'success');
+    } else {
+      $('#login-error').textContent = '登录码不正确，请重新输入';
+      card.classList.remove('shake');
+      void card.offsetWidth;                            // 重触发抖动动画
+      card.classList.add('shake');
+      $('#login-code').value = '';
+      $('#login-code').focus();
+    }
+  });
+}
+
+/* 退出登录：清除标识并回到登录页 */
+function logout() {
+  localStorage.removeItem(AUTH_KEY);
+  location.reload();
+}
+
 async function init() {
+  /* 登录门：未通过登录码时不初始化、不显示系统内容 */
+  if (!isAuthed()) { bindLogin(); return; }
+  const loginOverlay = document.querySelector('#login-screen');
+  if (loginOverlay) loginOverlay.remove();   // 已登录：直接移除登录遮罩
+
+  initApp();
+}
+
+async function initApp() {
   loadLocalAll();     // 先从 localStorage 恢复（无数据用默认示例），保证首屏即时渲染
   bindNav();
   bindModalEvents();
@@ -1470,7 +1517,7 @@ async function init() {
     closeModal('#modal-confirm');
     if (cb) cb();
   });
-  $('#login-btn').addEventListener('click', () => toast('当前为内部免登录模式，可直接使用', 'info'));
+  $('#login-btn').addEventListener('click', logout);   // 退出登录
 
   const now = new Date();
   calY = now.getFullYear(); calM = now.getMonth();
