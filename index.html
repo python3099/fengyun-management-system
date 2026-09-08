@@ -6,7 +6,7 @@
 <title>广东丰云智能科技有限公司管理系统</title>
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 48'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop offset='0' stop-color='%233B82F6'/%3E%3Cstop offset='1' stop-color='%231D4ED8'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='48' height='48' rx='11' fill='url(%23g)'/%3E%3Cg stroke='%23fff' stroke-width='2.6' fill='none' stroke-linecap='round'%3E%3Ccircle cx='12' cy='12' r='4.2'/%3E%3Ccircle cx='36' cy='12' r='4.2'/%3E%3Ccircle cx='12' cy='36' r='4.2'/%3E%3Ccircle cx='36' cy='36' r='4.2'/%3E%3Cpath d='M15 15l5.5 5.5M33 15l-5.5 5.5M15 33l5.5-5.5M33 33l-5.5-5.5'/%3E%3C/g%3E%3Ccircle cx='24' cy='24' r='3.4' fill='%23fff'/%3E%3C/svg%3E">
 <meta name="theme-color" content="#0F172A">
-<link rel="stylesheet" href="css/style.css?v=1.8.2">
+<link rel="stylesheet" href="css/style.css?v=1.9.0">
 </head>
 <body>
 <noscript>本系统需要启用 JavaScript 才能使用，请在浏览器设置中允许运行脚本。</noscript>
@@ -14,7 +14,7 @@
 <!-- ===================== 登录页（未通过登录码时遮挡整个系统） ===================== -->
 <div id="login-screen">
   <div class="login-card">
-    <div class="login-logo"><img src="img/logo-mark.png?v=1.8.2" alt="广东丰云智能科技有限公司"></div>
+    <div class="login-logo"><img src="img/logo-mark.png?v=1.9.0" alt="广东丰云智能科技有限公司"></div>
     <h1 class="login-title">广东丰云智能科技有限公司</h1>
     <p class="login-sub">内部管理系统 · 请输入登录码访问</p>
     <form id="login-form" autocomplete="off">
@@ -29,7 +29,7 @@
 <!-- ===================== 顶部导航栏 ===================== -->
 <header class="topbar">
   <div class="topbar-left">
-    <div class="logo" title="广东丰云智能科技有限公司"><img src="img/logo-mark.png?v=1.8.2" alt="广东丰云智能科技有限公司"></div>
+    <div class="logo" title="广东丰云智能科技有限公司"><img src="img/logo-mark.png?v=1.9.0" alt="广东丰云智能科技有限公司"></div>
     <span class="sys-title">广东丰云智能科技有限公司管理系统</span>
   </div>
   <div class="topbar-right">
@@ -42,8 +42,8 @@
 <!-- ===================== 侧边菜单栏 ===================== -->
 <aside class="sidebar">
   <nav class="menu">
-    <button class="menu-item active" data-page="todo"><span class="mi-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4.5" width="18" height="16" rx="3"/><path d="M8 2.5v4M16 2.5v4M3 9.5h18"/></svg></span><span class="mi-text">日常待办</span></button>
-    <button class="menu-item" data-page="ops"><span class="mi-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 20v-6M11 20V6M17 20v-9"/><path d="M3 20h18"/></svg></span><span class="mi-text">运营情况</span></button>
+    <button class="menu-item active" data-page="todo"><span class="mi-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4.5" width="18" height="16" rx="3"/><path d="M8 2.5v4M16 2.5v4M3 9.5h18"/></svg></span><span class="mi-text">工作待办</span></button>
+    <button class="menu-item" data-page="ops"><span class="mi-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 20v-6M11 20V6M17 20v-9"/><path d="M3 20h18"/></svg></span><span class="mi-text">运营总览</span></button>
     <button class="menu-item" data-page="blocker"><span class="mi-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/><path d="M12 9v4M12 17h.01"/></svg></span><span class="mi-text">进度卡点</span></button>
     <button class="menu-item" data-page="proc"><span class="mi-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 17l6-6 4 4 8-8"/><path d="M14 7h7v7"/></svg></span><span class="mi-text">来年统采</span></button>
   </nav>
@@ -81,7 +81,7 @@
   <section class="page" id="page-ops">
     <div class="page-head">
       <div>
-        <h2>运营情况</h2>
+        <h2>运营总览</h2>
         <p class="page-sub">公司整体运营数据概览与各部门（多合同）经营情况看板，按合同总额排序</p>
       </div>
       <button class="btn btn-primary" id="btn-add-dept">＋ 添加部门数据</button>
@@ -127,7 +127,6 @@
           <thead>
             <tr>
               <th>序号</th>
-              <th class="th-drag"></th>
               <th>所属部门 <select id="filter-blk-dept" class="th-filter"></select></th>
               <th>问题/事项名称</th>
               <th>进展情况</th>
@@ -168,7 +167,6 @@
           <thead>
             <tr>
               <th>序号</th>
-              <th class="th-drag"></th>
               <th>需求名称</th>
               <th>服务需求描述</th>
               <th>区域</th>
@@ -232,7 +230,11 @@
         <div class="form-row-2">
           <div class="form-item">
             <label>负责人<i>*</i></label>
-            <input type="text" id="day-person" placeholder="必填">
+              <div class="person-input-wrap">
+                <input type="text" id="day-person" placeholder="必填">
+                <datalist id="day-person-list"></datalist>
+                <button type="button" id="day-person-clear" class="input-clear" title="清除并重新选择负责人" style="display:none">×</button>
+              </div>
           </div>
           <div class="form-item">
             <label>工作内容<i>*</i></label>
@@ -339,7 +341,7 @@
       </div>
       <div class="form-row-2">
         <div class="form-item">
-          <label>所属部门<i>*</i>（默认读取运营情况部门，可自定义）</label>
+          <label>所属部门<i>*</i>（默认读取运营总览部门，可自定义）</label>
           <input type="text" id="f-blk-dept" list="blk-dept-list" placeholder="选择或自定义填写" autocomplete="off">
           <datalist id="blk-dept-list"></datalist>
         </div>
@@ -455,6 +457,6 @@
   </div>
 </div>
 
-<script src="js/app.js?v=1.8.2"></script>
+<script src="js/app.js?v=1.9.0"></script>
 </body>
 </html>

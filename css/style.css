@@ -48,13 +48,13 @@ body { display: flow-root; }   /* 阻断 .main 外边距折叠出文档（顶栏
 }
 .topbar-left { display: flex; align-items: center; gap: 12px; min-width: 0; }
 .logo {
-  height: 40px; border-radius: 9px; flex-shrink: 0;
-  background: #fff; padding: 2px 8px;
-  display: flex; align-items: center; justify-content: center;
-  box-shadow: 0 6px 18px -6px rgba(2, 6, 23, .8);
+  height: 40px; width: 70px; border-radius: 9px; flex-shrink: 0;
+  background: transparent; padding: 0;
+  display: flex; align-items: center; justify-content: flex-start;
+  box-shadow: none;
   transition: transform .3s;
 }
-.logo img { height: 100%; width: auto; max-width: 92px; object-fit: contain; display: block; }
+.logo img { height: 36px; width: auto; max-width: 70px; object-fit: contain; display: block; }
 .logo:hover { transform: rotate(-6deg) scale(1.05); }
 .sys-title {
   font-size: 16.5px; font-weight: 700; letter-spacing: .3px;
@@ -261,7 +261,7 @@ select { cursor: pointer; }
 /* 格内待办：负责人以醒目芯片逐行展示，超出滚动 */
 /* 人员芯片：横向流式排列 */
 .cal-todo-line {
-  font-size: 13px; font-weight: 600; color: #1E40AF;
+  font-size: 15px; font-weight: 600; color: #1E40AF;
   background: rgba(59, 130, 246, .10);
   line-height: 1.55; padding: 1px 8px;
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
@@ -323,6 +323,8 @@ select { cursor: pointer; }
 /* ---------- 人员本月待办弹窗 ---------- */
 .person-day-group { margin-bottom: 14px; }
 .pdg-date { display: flex; align-items: center; gap: 7px; font-weight: 700; color: var(--ink); font-size: 13px; margin-bottom: 7px; }
+.pdg-date-num { font-size: 14px; font-variant-numeric: tabular-nums; }
+.pdg-date-num.pdg-red { color: #DC2626; font-weight: 800; }
 
 /* =========================================================
    模块二：运营情况（部门 + 多合同）
@@ -480,27 +482,54 @@ select { cursor: pointer; }
 .proc-tab.tab-danger.active .tab-count { background: rgba(255, 255, 255, .25); color: #fff; }
 
 /* 进度卡点：列宽收紧 —— 拖拽把手紧挨序号，部门/负责人/状态窄列，进展情况保持宽 */
-.data-table:has(#blocker-tbody) th:nth-child(1) { width: 46px; }
-.data-table:has(#blocker-tbody) th:nth-child(2) { width: 26px; }
-.data-table:has(#blocker-tbody) th:nth-child(3) { width: 108px; }
-.data-table:has(#blocker-tbody) th:nth-child(6) { width: 88px; }
-.data-table:has(#blocker-tbody) th:nth-child(8) { width: 92px; }
+/* =========================================================
+   进度卡点：固定列宽布局，筛选/内容变化列宽恒定不跳动
+   ========================================================= */
+.data-table:has(#blocker-tbody) { table-layout: fixed; width: 100%; }
+.data-table:has(#blocker-tbody) th:nth-child(1) { width: 6%; }
+.data-table:has(#blocker-tbody) th:nth-child(2) { width: 10%; }
+.data-table:has(#blocker-tbody) th:nth-child(3) { width: 16%; }
+.data-table:has(#blocker-tbody) th:nth-child(4) { width: 21%; }
+.data-table:has(#blocker-tbody) th:nth-child(5) { width: 7%; }
+.data-table:has(#blocker-tbody) th:nth-child(6) { width: 14%; }
+.data-table:has(#blocker-tbody) th:nth-child(7) { width: 9%; }
+.data-table:has(#blocker-tbody) th:nth-child(8) { width: 9%; }
+.data-table:has(#blocker-tbody) th:nth-child(9) { width: 8%; }
+.data-table:has(#blocker-tbody) td { word-break: break-word; overflow: hidden; }
+.data-table:has(#blocker-tbody) .td-wrap { min-width: 0; max-width: none; }
+.data-table:has(#blocker-tbody) th { overflow: hidden; }
 .data-table:has(#blocker-tbody) th,
 .data-table:has(#blocker-tbody) td { padding-left: 10px; padding-right: 10px; }
 .data-table:has(#blocker-tbody) td.td-ops .btn { padding: 4px 8px; }
-.data-table:has(#blocker-tbody) td:nth-child(3),
-.data-table:has(#blocker-tbody) td:nth-child(6),
-.data-table:has(#blocker-tbody) td:nth-child(8) { white-space: nowrap; }
+.data-table:has(#blocker-tbody) td:nth-child(2),
+.data-table:has(#blocker-tbody) td:nth-child(5),
+.data-table:has(#blocker-tbody) td:nth-child(7) { white-space: nowrap; }
 
 /* 进度卡点：部门/负责人/状态三列内容居中（含表头筛选下拉） */
-.data-table:has(#blocker-tbody) th:nth-child(3),
-.data-table:has(#blocker-tbody) td:nth-child(3),
-.data-table:has(#blocker-tbody) th:nth-child(6),
-.data-table:has(#blocker-tbody) td:nth-child(6),
-.data-table:has(#blocker-tbody) th:nth-child(8),
-.data-table:has(#blocker-tbody) td:nth-child(8) { text-align: center; }
-.data-table:has(#blocker-tbody) td:nth-child(3),
-.data-table:has(#blocker-tbody) td:nth-child(6) { font-weight: 500; }
+.data-table:has(#blocker-tbody) th:nth-child(2),
+.data-table:has(#blocker-tbody) td:nth-child(2),
+.data-table:has(#blocker-tbody) th:nth-child(5),
+.data-table:has(#blocker-tbody) td:nth-child(5),
+.data-table:has(#blocker-tbody) th:nth-child(7),
+.data-table:has(#blocker-tbody) td:nth-child(7) { text-align: center; }
+.data-table:has(#blocker-tbody) td:nth-child(2),
+.data-table:has(#blocker-tbody) td:nth-child(5) { font-weight: 500; }
+
+/* =========================================================
+   模块四：来年统采（表格）—— 固定列宽，展开/收缩列间距不变
+   ========================================================= */
+.proc-table { table-layout: fixed; width: 100%; min-width: 1146px; }
+/* 序号(含拖拽)/需求名称/服务需求描述/区域/频次/预算/备注/操作 */
+.proc-table th:nth-child(1), .proc-table td:nth-child(1) { width: 64px; }
+.proc-table th:nth-child(2), .proc-table td:nth-child(2) { width: 205px; }
+.proc-table th:nth-child(3), .proc-table td:nth-child(3) { width: 320px; }
+.proc-table th:nth-child(4), .proc-table td:nth-child(4) { width: 130px; }
+.proc-table th:nth-child(5), .proc-table td:nth-child(5) { width: 100px; }
+.proc-table th:nth-child(6), .proc-table td:nth-child(6) { width: 110px; }
+.proc-table th:nth-child(7), .proc-table td:nth-child(7) { width: 190px; }
+.proc-table th:nth-child(8), .proc-table td:nth-child(8) { width: 122px; }
+.proc-table th, .proc-table td { overflow: hidden; }
+.proc-table .td-wrap, .proc-table .td-clamp { min-width: 0; max-width: none; }
 
 /* 未对接清单：整行淡红底 + 左侧红色渐变条，重点关注 */
 .proc-table tbody tr.row-danger td { background: linear-gradient(90deg, #FFF5F5, #FFFAFA 30%); }
@@ -634,8 +663,8 @@ select { cursor: pointer; }
    ========================================================= */
 @media (max-width: 768px) {
   .topbar { height: 56px; padding: 0 12px; }
-  .logo { height: 33px; border-radius: 8px; padding: 2px 5px; }
-  .logo img { height: 100%; max-width: 66px; }
+  .logo { height: 33px; width: 62px; border-radius: 8px; padding: 0; background: transparent; box-shadow: none; }
+  .logo img { height: 30px; max-width: 62px; }
   .sys-title { font-size: 14px; }
   .login-btn { padding: 5px 10px; font-size: 12px; border-radius: 9px; }
 
@@ -777,3 +806,34 @@ body.not-authed .main { display: none !important; }
   position: absolute; bottom: 26px; left: 0; right: 0;
   color: rgba(148, 163, 184, .5); font-size: 12px; text-align: center; letter-spacing: 1px;
 }
+
+/* 负责人记忆标签：输入框下常显，点击即填入，不依赖原生 datalist */
+.person-drop {
+  display: none; position: fixed; z-index: 1000;
+  background: #fff; border-radius: 12px; padding: 6px;
+  box-shadow: 0 16px 40px -12px rgba(2, 6, 23, .4); border: 1px solid rgba(15, 23, 42, .1);
+  flex-direction: column; gap: 2px; overflow-y: auto;
+}
+.person-drop.show { display: flex; }
+.pd-item {
+  text-align: left; border: none; background: none;
+  padding: 8px 12px; border-radius: 8px; font-size: 13px; color: var(--ink-2); cursor: pointer;
+}
+.pd-item:hover { background: #EFF4FF; color: #1D4ED8; }
+
+/* 负责人输入框 + 清除重选按钮 */
+.person-input-wrap { position: relative; }
+.person-input-wrap .input-clear {
+  position: absolute; right: 8px; top: 50%; transform: translateY(-50%);
+  width: 20px; height: 20px; border: none; border-radius: 50%;
+  background: rgba(100,116,139,.15); color: #475569; font-size: 14px; line-height: 1;
+  cursor: pointer; display: flex; align-items: center; justify-content: center;
+}
+.person-input-wrap .input-clear:hover { background: #FEE2E2; color: #DC2626; }
+
+
+/* 序号单元格内嵌拖拽把手（三/四模块） */
+.drag-cell { white-space: nowrap; }
+.drag-cell .drag-no { display: inline-block; min-width: 18px; color: var(--ink-3); font-variant-numeric: tabular-nums; }
+.drag-cell .drag-handle { cursor: grab; color: #C0C9D6; font-size: 12px; user-select: none; margin-left: 3px; }
+.drag-cell .drag-handle:hover { color: #2563EB; }

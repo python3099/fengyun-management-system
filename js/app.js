@@ -7,7 +7,7 @@
      3. local  - 浏览器本地模式：localStorage（兜底方案，始终作为镜像缓存）
    ========================================================= */
 
-const APP_VERSION = '1.8.2';
+const APP_VERSION = '1.9.0';
 
 /* =========================================================
    工具函数
@@ -580,6 +580,7 @@ function bindTodoEvents() {
     e.preventDefault();
     addDayTodo();
   });
+  bindPersonDrop();
   $('#day-list').addEventListener('click', e => {
     const editBtn = e.target.closest('[data-edit-todo]');
     const delBtn = e.target.closest('[data-del-todo]');
@@ -756,6 +757,7 @@ function addDayTodo() {
     id: uid(), person: person, content: content, remark: remark, createTime: fmtDateTime(new Date())
   });
   saveTodos();
+  rememberPerson(person);
   $('#day-person').value = ''; $('#day-content').value = ''; $('#day-remark').value = '';
   renderCalendar(); renderDayList();
   toast('待办添加成功');
@@ -771,8 +773,103 @@ function saveDayTodoEdit(id) {
   if (!t) { editTodoId = ''; renderDayList(); return; }
   t.person = person; t.content = content; t.remark = $('#edit-remark').value.trim();
   editTodoId = '';
+  rememberPerson(person);
   saveTodos(); renderCalendar(); renderDayList();
   toast('待办已更新');
+}
+
+/* ========== 负责人记忆（填写过的人名可下拉选择，新名字自动加入） ========== */
+const PERSONS_KEY = 'fengyun_persons';
+const DEFAULT_PERSONS = ['张林', '罗文科', '陈华栋', '吴泳思'];
+
+function getPersons() {
+  try {
+    const raw = localStorage.getItem(PERSONS_KEY);
+    if (raw) {
+      const arr = JSON.parse(raw);
+      if (Array.isArray(arr) && arr.length) return arr;
+    }
+  } catch (e) { /* 忽略损坏数据 */ }
+  return [...DEFAULT_PERSONS];
+}
+function rememberPerson(name) {
+  const p = String(name || '').trim();
+  if (!p) return;
+  const list = getPersons();
+  if (!list.includes(p)) {
+    list.push(p);
+    try { localStorage.setItem(PERSONS_KEY, JSON.stringify(list)); } catch (e) { /* 忽略 */ }
+  }
+}
+/* 负责人记忆下拉：点击输入框弹出历史人名列表，选择即填入（可手动输入新名自动记忆） */
+function ensurePersonDrop() {
+  let d = $('#person-drop');
+  if (!d) {
+    d = document.createElement('div');
+    d.id = 'person-drop';
+    d.className = 'person-drop';
+    document.body.appendChild(d);
+  }
+  return d;
+}
+function showPersonDrop(input) {
+  const list = getPersons();
+  const drop = ensurePersonDrop();
+  if (!list.length) { hidePersonDrop(); return; }
+  drop.innerHTML = list.map(p =>
+    '<button type="button" class="pd-item" data-p="' + esc(p) + '">' + esc(p) + '</button>').join('');
+  const r = input.getBoundingClientRect();
+  const below = window.innerHeight - r.bottom;
+  drop.style.position = 'fixed';
+  drop.style.left = Math.max(8, r.left) + 'px';
+  drop.style.minWidth = Math.max(120, r.width) + 'px';
+  if (below > 150) {
+    drop.style.top = (r.bottom + 4) + 'px'; drop.style.bottom = 'auto';
+    drop.style.maxHeight = (below - 8) + 'px';
+  } else {
+    drop.style.bottom = (window.innerHeight - r.top + 4) + 'px'; drop.style.top = 'auto';
+    drop.style.maxHeight = (r.top - 8) + 'px';
+  }
+  drop.classList.add('show');
+  window.__pdInput = input;
+}
+function hidePersonDrop() {
+  const d = $('#person-drop'); if (d) d.classList.remove('show');
+  window.__pdInput = null;
+}
+function bindPersonDrop() {
+  /* 点击负责人输入框（添加表单 + 行内编辑）弹出记忆列表 */
+  document.addEventListener('focusin', e => {
+    if (e.target.id === 'day-person' || e.target.id === 'edit-person') showPersonDrop(e.target);
+  });
+  document.addEventListener('click', e => {
+    const item = e.target.closest('.pd-item');
+    if (item) {
+      const input = window.__pdInput;
+      if (input) { input.value = item.dataset.p; input.focus(); }
+      if (input && input.id === 'day-person') syncClear();
+      hidePersonDrop();
+      return;
+    }
+    const d = $('#person-drop');
+    if (d && d.classList.contains('show') && !e.target.closest('#person-drop') &&
+        e.target.id !== 'day-person' && e.target.id !== 'edit-person' &&
+        e.target.id !== 'day-person-clear') hidePersonDrop();
+  });
+
+  /* 清除/重新选择负责人 */
+  const clearBtn = $('#day-person-clear');
+  const input = $('#day-person');
+  const syncClear = () => { if (clearBtn) clearBtn.style.display = input && input.value.trim() ? '' : 'none'; };
+  if (clearBtn && input) {
+    input.addEventListener('input', syncClear);
+    input.addEventListener('change', syncClear);
+    clearBtn.addEventListener('click', () => {
+      input.value = '';
+      syncClear();
+      showPersonDrop(input);  // 直接重新弹出下拉，便于重新选择
+    });
+  }
 }
 
 /* ========== 人员本月待办弹窗（点击日历中的人名打开） ========== */
@@ -787,10 +884,25 @@ function openPersonModal(person) {
   $('#person-todo-body').innerHTML = list.length
     ? list.map(({ date, t }) => {
         const hol = HOLIDAYS[date];
+        const day = new Date(date + 'T00:00:00');
+        const weekday = day.getDay();
+        const isWeekend = weekday === 0 || weekday === 6;
+        const isRest = !!(hol && hol.type === 'rest');
+        const isWork = !!(hol && hol.type === 'work');
+        const redCls = (isWeekend || isRest) ? ' pdg-red' : '';
+        const badge = isRest
+          ? '<span class="day-badge badge-rest" title="' + esc(hol.name) + '（放假）">休</span>'
+          : isWork
+            ? '<span class="day-badge badge-work" title="' + esc(hol.name) + '调休上班">班</span>'
+            : '';
+        const holTag = (isRest || isWork)
+          ? '<span class="tag ' + (isRest ? 'tag-red' : 'tag-blue') + '">' + esc(hol.name) + '</span>'
+          : '';
         return '<div class="person-day-group">' +
-          '<div class="pdg-date">' + date.slice(5).replace('-', ' / ') +
-            '<span class="tag tag-gray">' + '周' + '日一二三四五六'[new Date(date + 'T00:00:00').getDay()] + '</span>' +
-            (hol && hol.type === 'rest' ? '<span class="tag tag-red">' + hol.name + '</span>' : '') +
+          '<div class="pdg-date"><span class="pdg-date-num' + redCls + '">' + date.slice(5).replace('-', ' / ') + '</span>' +
+            badge +
+            '<span class="tag ' + (isWeekend && !isRest && !isWork ? 'tag-red' : 'tag-gray') + '">' + '周' + '日一二三四五六'[weekday] + '</span>' +
+            holTag +
           '</div>' +
           '<div class="day-item"><div class="day-item-main">' +
             '<div class="day-item-content">' + esc(t.content) + '</div>' +
@@ -1025,6 +1137,7 @@ function bindBlockerEvents() {
   /* 自定义指针拖拽：按住行首 ⋮⋮ 上下拖动，行实时跟随，松手即保存 */
   enableRowDrag('#blocker-tbody', () => {
     blockers = commitDomOrder($('#blocker-tbody'), blockers, isBlockerVisible);
+    localStorage.setItem(BLK_DRAGGED_KEY, '1');   // 标记用户已自定义排序
     saveBlockers(); renderBlockers();
     toast('排序已保存');
   });
@@ -1110,11 +1223,17 @@ function commitDomOrder(tbody, arr, isVisible) {
 
 function renderBlockers() {
   refreshBlockerFilters();
-  const list = blockers.filter(isBlockerVisible);
+  /* 默认按部门拼音/字母顺序；用户拖拽过后按拖拽顺序 */
+  let sorted = blockers;
+  if (!localStorage.getItem(BLK_DRAGGED_KEY)) {
+    sorted = [...blockers].sort((x, y) =>
+      (x.department || '').localeCompare(y.department || '', 'zh') ||
+      (x.title || '').localeCompare(y.title || '', 'zh'));
+  }
+  const list = sorted.filter(isBlockerVisible);
   $('#blocker-tbody').innerHTML = list.map((b, i) =>
     '<tr data-id="' + b.id + '">' +
-      '<td>' + (i + 1) + '</td>' +
-      '<td class="drag-handle" title="按住拖动调整顺序">⋮⋮</td>' +
+      '<td class="drag-cell"><span class="drag-no">' + (i + 1) + '</span><span class="drag-handle" title="按住拖动调整顺序">⋮⋮</span></td>' +
       '<td>' + esc(b.department) + '</td>' +
       '<td class="td-title">' + esc(b.title) + '</td>' +
       '<td class="td-wrap">' + esc(b.progress) + '</td>' +
@@ -1240,17 +1359,53 @@ function bindProcEvents() {
   $('#f-unit-save').addEventListener('click', saveUnitRename);
   $('#f-unit-name').addEventListener('keydown', e => { if (e.key === 'Enter') saveUnitRename(); });
 
-  /* 自定义指针拖拽：在当前分类清单内部调整顺序（收起的分组不参与） */
-  enableRowDrag('#proc-tbody', () => {
-    procs = commitDomOrder($('#proc-tbody'), procs, isProcVisible);
-    saveProcs(); renderProc();
-    toast('排序已保存');
-  });
+  /* 自定义指针拖拽：子需求跨部门时整组重排（收起的分组不参与），拖拽后按此顺序保存 */
+  enableRowDrag('#proc-tbody', procReorderCommit);
 }
 
 /* 该需求当前是否显示在表格中（分类匹配且所在分组未收起） */
 function isProcVisible(p) {
   return p.category === currentProcTab && !collapsedProcUnits.has(p.unit);
+}
+
+/* 部门分组自定义顺序（localStorage 持久化：category -> [units...]） */
+const PROC_GROUP_ORDER_KEY = 'fengyun_procGroupOrder';
+const BLK_DRAGGED_KEY = 'fengyun_blkDragged';
+function getProcGroupOrder() {
+  try { return JSON.parse(localStorage.getItem(PROC_GROUP_ORDER_KEY)) || {}; } catch (e) { return {}; }
+}
+function setProcGroupOrder(cat, units) {
+  try {
+    const o = getProcGroupOrder(); o[cat] = units;
+    localStorage.setItem(PROC_GROUP_ORDER_KEY, JSON.stringify(o));
+  } catch (e) { /* 忽略 */ }
+}
+
+/* 拖拽提交：子需求按 DOM 顺序整组重排——拖到别的部门时，整个部门组移动到目标位置 */
+function procReorderCommit() {
+  const tbody = $('#proc-tbody');
+  const orderIds = [...tbody.querySelectorAll('tr[data-id]')].map(r => r.dataset.id);
+  const cat = currentProcTab;
+  const allCat = procs.filter(p => p.category === cat);
+  const byId = {}; allCat.forEach(p => { byId[p.id] = p; });
+  if (!orderIds.length) { renderProc(); return; }
+  const vis = orderIds.map(id => byId[id]).filter(p => p && p.category === cat && !collapsedProcUnits.has(p.unit));
+  if (!vis.length) { renderProc(); return; }
+  /* 组顺序：按可见行中首次出现顺序（整组移动的体现） */
+  const unitOrder = []; const seenU = new Set();
+  vis.forEach(p => { if (!seenU.has(p.unit)) { seenU.add(p.unit); unitOrder.push(p.unit); } });
+  /* 重建：每组的可见项 + 该组被收起的项（保持原序），再追加整组收起的其他组 */
+  const rebuilt = [];
+  unitOrder.forEach(u => {
+    rebuilt.push(...vis.filter(p => p.unit === u), ...allCat.filter(p => p.unit === u && !orderIds.includes(p.id)));
+  });
+  allCat.forEach(p => { if (!seenU.has(p.unit)) rebuilt.push(p); });
+  const final = []; const seenId = new Set();
+  rebuilt.forEach(p => { if (!seenId.has(p.id)) { seenId.add(p.id); final.push(p); } });
+  setProcGroupOrder(cat, unitOrder);
+  procs = [...procs.filter(p => p.category !== cat), ...final];
+  saveProcs(); renderProc();
+  toast('排序已保存');
 }
 
 /* 在指定部门下新增子需求（打开需求弹窗并锁定单位） */
@@ -1302,6 +1457,16 @@ function renderProc() {
     if (!g) { g = { unit: p.unit, items: [] }; groups.push(g); }
     g.items.push(p);
   });
+  /* 部门默认按拼音/字母顺序；拖拽后按保存的拖拽顺序 */
+  const storedOrder = getProcGroupOrder()[currentProcTab];
+  if (Array.isArray(storedOrder) && storedOrder.length) {
+    const unitSet = new Set(groups.map(g => g.unit));
+    const ordered = storedOrder.filter(u => unitSet.has(u))
+      .concat(groups.filter(g => !storedOrder.includes(g.unit)).map(g => g.unit));
+    groups.sort((x, y) => ordered.indexOf(x.unit) - ordered.indexOf(y.unit));
+  } else {
+    groups.sort((x, y) => (x.unit || '').localeCompare(y.unit || '', 'zh'));
+  }
   let html = '';
   let seq = 0;
   groups.forEach(g => {
@@ -1310,7 +1475,7 @@ function renderProc() {
     const budgetSum = g.items.reduce((s, p) => s + (p.budget != null ? Number(p.budget) || 0 : 0), 0);
     const budgetText = budgetSum > 0 ? '合计 ' + formatNum(budgetSum) + ' 万' : '待定';
     html += '<tr class="proc-group" data-unit="' + esc(g.unit) + '">' +
-      '<td colspan="2"><div class="g-row">' +
+      '<td><div class="g-row">' +
           '<span class="expand-caret">' + (collapsed ? '▸' : '▾') + '</span> ' +
           '<span class="g-unit">' + esc(g.unit) + '</span>' +
       '</div></td>' +
@@ -1334,8 +1499,7 @@ function procRowHTML(p, seq) {
   const danger = p.category === '未对接';
   const expanded = expandedProcIds.has(p.id);
   return '<tr data-id="' + p.id + '" class="' + (danger ? 'row-danger' : '') + (expanded ? ' tr-expanded' : '') + '">' +
-    '<td>' + seq + '</td>' +
-    '<td class="drag-handle" title="按住拖动调整顺序（组内）">⋮⋮</td>' +
+    '<td class="drag-cell"><span class="drag-no">' + seq + '</span><span class="drag-handle" title="按住拖动调整顺序（组内）">⋮⋮</span></td>' +
     '<td class="td-title"><span class="expand-caret">' + (expanded ? '▾' : '▸') + '</span> ' + esc(p.name) +
       (danger ? ' <span class="tag tag-red">重点关注</span>' : '') +
       (p.category !== '已落地' && p.follow ? ' <span class="tag ' + (FOLLOW_CLASS[p.follow] || 'tag-gray') + '">' + esc(p.follow) + '</span>' : '') + '</td>' +

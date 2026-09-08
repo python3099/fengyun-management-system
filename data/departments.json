@@ -1,65 +1,115 @@
 [
   {
-    "id": "legacy-1",
-    "name": "交通局",
-    "service": "道路桥梁巡查",
-    "contracts": [
-      {
-        "id": "mtp4x9u5-tmyj4h",
-        "name": "国省道巡查服务合同",
-        "content": "国省道沿线航拍巡查与病害识别",
-        "amount": 200,
-        "patrol": 600,
-        "problems": 120,
-        "cats": [
-          {
-            "name": "道路病害类",
-            "count": 80
-          },
-          {
-            "name": "设施损坏类",
-            "count": 40
-          }
-        ]
-      }
-    ]
-  },
-  {
     "id": "mtp4y6hi-3e891y",
     "name": "住建局",
-    "service": "城市网格化巡查与违建治理",
+    "service": "网格化巡查与两违分析",
     "contracts": [
       {
         "id": "mtp4y6hh-lbvz7d",
-        "name": "城市网格化巡查服务合同",
-        "content": "全市建成区网格化航拍巡查",
-        "amount": 180,
-        "patrol": 1056,
-        "problems": 268,
+        "name": "2026年新丰县住房和城乡建设管理局无人机巡查服务采购合同20260106",
+        "content": "县城13.31km²每周网格巡飞，两违分析",
+        "amount": 30.82596,
+        "patrol": 588,
+        "problems": 219,
         "cats": [
           {
-            "name": "市容秩序类",
-            "count": 142
+            "name": "1.疑似新建",
+            "count": 0
           },
           {
-            "name": "环境卫生类",
-            "count": 126
+            "name": "2.疑似改建或加层",
+            "count": 0
           }
         ]
       },
       {
         "id": "mtp4y6hi-v9osv5",
-        "name": "违建排查专项合同",
-        "content": "重点区域违建航拍比对",
-        "amount": 220,
-        "patrol": 800,
-        "problems": 155,
-        "cats": [
-          {
-            "name": "违章建筑类",
-            "count": 66
-          }
-        ]
+        "name": "2026年新丰县住房和城乡建设管理局无人机巡查服务采购合同20260225",
+        "content": "中心城区2每周两违巡查及各乡镇月度巡查",
+        "amount": 12.43308,
+        "patrol": 176,
+        "problems": 62,
+        "cats": []
+      }
+    ]
+  },
+  {
+    "id": "mtsdyald-mmjatx",
+    "name": "应急管理局",
+    "service": "一台S110无人机机巢采购",
+    "contracts": [
+      {
+        "id": "mtsdyald-b87sca",
+        "name": "2026年新丰县应急管理局小型基站设备采购及配套服务平台租赁合同20260209",
+        "content": "一台S110基站建设",
+        "amount": 33,
+        "patrol": 0,
+        "problems": 0,
+        "cats": []
+      }
+    ]
+  },
+  {
+    "id": "mtsdzvl0-zw50nb",
+    "name": "交通局",
+    "service": "S347+G105道路巡查",
+    "contracts": [
+      {
+        "id": "mtsdzvl0-05yazc",
+        "name": "交通运输局服务合同20260107",
+        "content": "",
+        "amount": 10.296,
+        "patrol": 50,
+        "problems": 141,
+        "cats": []
+      }
+    ]
+  },
+  {
+    "id": "mtse0qav-8a0n2v",
+    "name": "水务局",
+    "service": "河道巡查",
+    "contracts": [
+      {
+        "id": "mtse0qav-n95dyo",
+        "name": "2026年新丰县水务局无人机巡查服务采购合同20260123",
+        "content": "",
+        "amount": 5.1,
+        "patrol": 40,
+        "problems": 203,
+        "cats": []
+      }
+    ]
+  },
+  {
+    "id": "mtse180j-jpkz9i",
+    "name": "环保局",
+    "service": "饮用水源地、水库巡查",
+    "contracts": [
+      {
+        "id": "mtse180j-zcfgb2",
+        "name": "2026年韶关市生态环境局新丰分局无人机巡查服务采购合同20260225",
+        "content": "",
+        "amount": 2.59584,
+        "patrol": 15,
+        "problems": 14,
+        "cats": []
+      }
+    ]
+  },
+  {
+    "id": "mtse218d-gkk0w1",
+    "name": "自然资源局",
+    "service": "三维建模",
+    "contracts": [
+      {
+        "id": "mtse218d-rafvo5",
+        "name": "新丰自然资源局服务合同20260810",
+        "content": "",
+        "amount": 14.094,
+        "patrol": 0,
+        "problems": 0,
+        "cats": []
       }
     ]
   }
