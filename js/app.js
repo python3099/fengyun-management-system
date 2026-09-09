@@ -1672,7 +1672,7 @@ function bindLogin() {
       screen.classList.add('login-out');   // 淡出过渡
       setTimeout(() => screen.remove(), 350);
       initApp();
-      toast('欢迎回来', 'info');   // 普通蓝色轻提示
+      toast('欢迎回来', 'text');   // 普通蓝色轻提示
     } else {
       $('#login-error').textContent = '登录码不正确，请重新输入';
       card.classList.remove('shake');

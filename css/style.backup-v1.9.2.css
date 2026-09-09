@@ -634,7 +634,6 @@ select { cursor: pointer; }
 .toast-success { background: linear-gradient(135deg, #16A34A, #15803D); }
 .toast-error   { background: linear-gradient(135deg, #EF4444, #B91C1C); }
 .toast-info    { background: linear-gradient(135deg, #3B82F6, #1D4ED8); }
-.toast-text    { background: transparent; color: #2563EB; font-weight: 400; box-shadow: none; }
 
 /* =========================================================
    响应式
@@ -799,10 +798,7 @@ body.not-authed .main { display: none !important; }
 #login-code {
   text-align: center; letter-spacing: 3px; font-size: 16px; font-weight: 600;
   padding: 12px 18px; border-radius: 999px;
-  border: 1px solid #E2E8F0;   /* 登录码输入框：悬浮/移开均无深色边框 */
 }
-#login-code:hover { border-color: #E2E8F0; box-shadow: none; }
-#login-code:focus { border-color: #93C5FD; box-shadow: 0 0 0 3px rgba(59, 130, 246, .15); }
 .login-btn-submit { padding: 11px 38px; font-size: 14.5px; letter-spacing: 3px; font-weight: 700; border-radius: 999px; width: auto; align-self: center; }
 #login-form { align-items: center; }
 .login-error { color: #DC2626; font-size: 12.5px; min-height: 18px; margin-top: 12px; font-weight: 500; }
