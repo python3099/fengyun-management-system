@@ -7,7 +7,7 @@
      3. local  - 浏览器本地模式：localStorage（兜底方案，始终作为镜像缓存）
    ========================================================= */
 
-const APP_VERSION = '1.9.0';
+const APP_VERSION = '1.9.1';
 
 /* =========================================================
    工具函数
@@ -214,11 +214,42 @@ function validateModuleData(name, v) {
 
 /* ========== 从 localStorage 加载（无数据时用默认示例初始化） ========== */
 function loadLocalAll() {
+  const fromDefault = [];
   MODULES.forEach(m => {
     const v = validateModuleData(m.name, LS.get(m.ls));
-    setModuleVal(m.name, v !== null ? v : DEFAULT_FACTORIES[m.name]());
-    LS.set(m.ls, getModuleVal(m.name));
+    if (v !== null) {
+      setModuleVal(m.name, v);
+    } else {
+      setModuleVal(m.name, DEFAULT_FACTORIES[m.name]());
+      LS.set(m.ls, getModuleVal(m.name));
+      fromDefault.push(m.name);   // 本地无数据，稍后尝试从 data 静态文件加载真实数据
+    }
   });
+  return fromDefault;
+}
+
+/* 静态数据种子：首次打开（localStorage 为空）时，从同源 data/*.json 加载
+   真实数据作为默认 —— 让 GitHub Pages 在线版也能直接显示待办/总览等数据 */
+async function loadStaticSeeds(fromDefault) {
+  if (!fromDefault || !fromDefault.length) return;
+  if (!/^https?:$/.test(location.protocol)) return;   // file:// 无法同源 fetch 静态 json
+  let changed = false;
+  for (const name of fromDefault) {
+    try {
+      const r = await fetch('data/' + moduleDef(name).file);
+      if (!r.ok) continue;
+      const v = validateModuleData(name, await r.json());
+      if (v === null) continue;
+      const empty = name === 'todos'
+        ? (typeof v === 'object' && !Object.keys(v).length)
+        : (!Array.isArray(v) || !v.length);
+      if (empty) continue;
+      setModuleVal(name, v);
+      LS.set(moduleDef(name).ls, v);
+      changed = true;
+    } catch (e) { /* 忽略 fetch / 解析失败 */ }
+  }
+  if (changed) { renderAllModules(); updateDataUI(); }
 }
 
 /* ========== 核心保存入口：所有模块的增删改都调用这里 ========== */
@@ -1668,7 +1699,7 @@ async function init() {
 }
 
 async function initApp() {
-  loadLocalAll();     // 先从 localStorage 恢复（无数据用默认示例），保证首屏即时渲染
+  const fromDefault = loadLocalAll();   // 先从 localStorage 恢复（无数据用默认示例），保证首屏即时渲染
   bindNav();
   bindModalEvents();
   bindTodoEvents();
@@ -1694,6 +1725,9 @@ async function initApp() {
   refreshDeptOptions();
   renderAllModules();
   updateDataUI();
+
+  /* 本地无数据时从 data 静态文件加载真实默认数据（在线版首次打开也可见） */
+  await loadStaticSeeds(fromDefault);
 
   /* 异步探测存储模式（服务器共享 / 目录绑定），完成后以远程数据为准重绘 */
   try {
