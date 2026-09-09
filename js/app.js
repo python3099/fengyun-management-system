@@ -7,7 +7,7 @@
      3. local  - 浏览器本地模式：localStorage（兜底方案，始终作为镜像缓存）
    ========================================================= */
 
-const APP_VERSION = '1.9.1';
+const APP_VERSION = '1.9.2';
 
 /* =========================================================
    工具函数
@@ -230,22 +230,23 @@ function loadLocalAll() {
 
 /* 静态数据种子：首次打开（localStorage 为空）时，从同源 data/*.json 加载
    真实数据作为默认 —— 让 GitHub Pages 在线版也能直接显示待办/总览等数据 */
-async function loadStaticSeeds(fromDefault) {
-  if (!fromDefault || !fromDefault.length) return;
+async function loadStaticSeeds() {
+  /* 静态托管（GitHub Pages / 局域网 http 等）场景：每次加载都以 data 静态文件为准，
+     保证在线版与本地数据完全一致（不因浏览器旧缓存而显示旧数据） */
   if (!/^https?:$/.test(location.protocol)) return;   // file:// 无法同源 fetch 静态 json
   let changed = false;
-  for (const name of fromDefault) {
+  for (const m of MODULES) {
     try {
-      const r = await fetch('data/' + moduleDef(name).file);
+      const r = await fetch('data/' + m.file);
       if (!r.ok) continue;
-      const v = validateModuleData(name, await r.json());
+      const v = validateModuleData(m.name, await r.json());
       if (v === null) continue;
-      const empty = name === 'todos'
+      const empty = m.name === 'todos'
         ? (typeof v === 'object' && !Object.keys(v).length)
         : (!Array.isArray(v) || !v.length);
       if (empty) continue;
-      setModuleVal(name, v);
-      LS.set(moduleDef(name).ls, v);
+      setModuleVal(m.name, v);
+      LS.set(m.ls, v);
       changed = true;
     } catch (e) { /* 忽略 fetch / 解析失败 */ }
   }
@@ -1727,7 +1728,7 @@ async function initApp() {
   updateDataUI();
 
   /* 本地无数据时从 data 静态文件加载真实默认数据（在线版首次打开也可见） */
-  await loadStaticSeeds(fromDefault);
+  await loadStaticSeeds();
 
   /* 异步探测存储模式（服务器共享 / 目录绑定），完成后以远程数据为准重绘 */
   try {
