@@ -260,10 +260,15 @@ select { cursor: pointer; }
 .cal-cell.cal-hol:hover { background: #FFEEEE; border-color: rgba(220, 38, 38, .3); }
 /* 人员筛选命中的格子 */
 .cal-cell.cell-hl { border-color: rgba(59, 130, 246, .55); background: #F0F6FF; box-shadow: inset 0 0 0 1px rgba(147, 197, 253, .7); }
-/* 今日日期格子：淡绿描边 */
-.cal-cell.today { outline: 2px solid #5BC98C; outline-offset: -2px; }
+/* 今日日期格子：淡绿渐变底 */
+.cal-cell.today { background: linear-gradient(180deg, #ECFDF3, #fff 92%); border-color: rgba(34,160,67,.18); }
+
 /* 已过日期待办人名：删除线 + 灰化 */
 .cal-cell.past .cal-todo-line { text-decoration: line-through; color: #94A3B8; }
+
+/* 人名弹窗里过时日期：整体置灰，左侧标签置灰 + 删除线 */
+.person-day-group.past { opacity: 0.65; }
+.person-day-group.past .tag { text-decoration: line-through; color: #94A3B8; }
 /* 格内待办：负责人以醒目芯片逐行展示，超出滚动 */
 /* 人员芯片：横向流式排列 */
 .cal-todo-line {

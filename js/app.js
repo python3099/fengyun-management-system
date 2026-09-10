@@ -934,7 +934,8 @@ function openPersonModal(person) {
         const holTag = (isRest || isWork)
           ? '<span class="tag ' + (isRest ? 'tag-red' : 'tag-blue') + '">' + esc(hol.name) + '</span>'
           : '';
-        return '<div class="person-day-group">' +
+        const isPast = date < fmtDate(new Date());
+        return '<div class="person-day-group' + (isPast ? ' past' : '') + '">' +
           '<div class="pdg-date"><span class="pdg-date-num' + redCls + '">' + date.slice(5).replace('-', ' / ') + '</span>' +
             badge +
             '<span class="tag ' + (isWeekend && !isRest && !isWork ? 'tag-red' : 'tag-gray') + '">' + '周' + '日一二三四五六'[weekday] + '</span>' +
