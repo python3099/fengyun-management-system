@@ -573,6 +573,7 @@ function bindNav() {
     item.addEventListener('click', () => {
       $$('.menu-item').forEach(x => x.classList.toggle('active', x === item));
       $$('.page').forEach(p => p.classList.toggle('active', p.id === 'page-' + item.dataset.page));
+      $$('.nav-link').forEach(nl => nl.classList.remove('active'));
     });
   });
 }
@@ -1700,6 +1701,30 @@ async function init() {
 }
 
 async function initApp() {
+  /* 首页 4 宫格：点卡片 = 点对应菜单（showPage 会自动隐藏首页、显示模块） */
+  document.querySelectorAll('.grid-card').forEach(card => {
+    card.addEventListener('click', () => {
+      const target = document.querySelector('.menu-item[data-page="' + card.dataset.module + '"]');
+      if (target) target.click();
+    });
+  });
+  /* 顶栏“首页”链接：显示 page-home，取消菜单高亮 */
+  document.querySelectorAll('.nav-link').forEach(link => {
+    link.addEventListener('click', e => {
+      e.preventDefault();
+      if (link.dataset.page !== 'home') {
+        const t = document.querySelector('.menu-item[data-page="' + link.dataset.page + '"]');
+        if (t) t.click();
+        return;
+      }
+      document.querySelectorAll('.page').forEach(pg => pg.classList.remove('active'));
+      const home = document.getElementById('page-home');
+      if (home) home.classList.add('active');
+      document.querySelectorAll('.menu-item').forEach(m => m.classList.remove('active'));
+      document.querySelectorAll('.nav-link').forEach(nl => nl.classList.toggle('active', nl.dataset.page === 'home'));
+    });
+  });
+
   const fromDefault = loadLocalAll();   // 先从 localStorage 恢复（无数据用默认示例），保证首屏即时渲染
   bindNav();
   bindModalEvents();

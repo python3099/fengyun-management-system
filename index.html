@@ -29,13 +29,16 @@
 <!-- ===================== 顶部导航栏 ===================== -->
 <header class="topbar">
   <div class="topbar-left">
-    <div class="logo" title="广东丰云智能科技有限公司"><img src="img/logo-mark.png?v=1.9.2" alt="广东丰云智能科技有限公司"></div>
-    <span class="sys-title">广东丰云智能科技有限公司管理系统</span>
+    <a href="#" class="logo-link" title="首页"><img src="img/logo-mark.png?v=1.9.2" alt="LOGO" class="topbar-logo"></a>
   </div>
+  <nav class="topbar-center">
+    <a href="#" class="nav-link active" data-page="home">首页</a>
+    <a href="#" class="nav-link" data-page="contact">关于</a>
+  </nav>
   <div class="topbar-right">
     <span id="datetime">--</span>
-    <button class="login-btn" id="data-btn" title="数据管理">💾 数据</button>
-    <button class="login-btn" id="login-btn" title="退出登录">⏻ 退出</button>
+    <button class="btn-plain" id="data-btn" title="数据管理">数据</button>
+    <button class="btn-plain" id="login-btn" title="退出登录">退出</button>
   </div>
 </header>
 
@@ -53,8 +56,34 @@
 <!-- ===================== 主内容区 ===================== -->
 <main class="main">
 
+  <!-- ========== 首页 4 宫格 ========== -->
+  <section class="page home-page active" id="page-home">
+    <div class="grid-container">
+      <div class="grid-card" data-module="ops">
+        <div class="grid-icon" style="filter:grayscale(1) opacity(.65)">📊</div>
+        <h2 class="grid-title">运营总览</h2>
+        <p class="grid-desc">实时监控数据，洞察业务全景</p>
+      </div>
+      <div class="grid-card" data-module="todo">
+        <div class="grid-icon" style="filter:grayscale(1) opacity(.65)">📋</div>
+        <h2 class="grid-title">工作待办</h2>
+        <p class="grid-desc">日历排程，高效管理每日事务</p>
+      </div>
+      <div class="grid-card" data-module="blocker">
+        <div class="grid-icon" style="filter:grayscale(1) opacity(.65)">🚧</div>
+        <h2 class="grid-title">进度卡点</h2>
+        <p class="grid-desc">项目节点，跟踪推进</p>
+      </div>
+      <div class="grid-card" data-module="proc">
+        <div class="grid-icon" style="filter:grayscale(1) opacity(.65)">📈</div>
+        <h2 class="grid-title">来年统采</h2>
+        <p class="grid-desc">年度计划与供应商协同</p>
+      </div>
+    </div>
+  </section>
+
   <!-- ========== 模块一：日常待办 ========== -->
-  <section class="page active" id="page-todo">
+  <section class="page" id="page-todo">
     <!-- 日历视图（顶满整屏，点击日期弹窗管理待办） -->
     <div class="card calendar-card">
       <div class="cal-toolbar">
