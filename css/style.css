@@ -171,6 +171,8 @@ body { display: flow-root; }   /* 阻断 .main 外边距折叠出文档（顶栏
 .tag-cyan   { background: rgba(14, 165, 233, .13); color: #0E7490; }
 .tag-gray   { background: rgba(100, 116, 139, .12); color: #475569; }
 .tag-person { background: rgba(59, 130, 246, .12); color: #2563EB; font-weight: 600; }
+/* 弹窗列表选中日期若为过时：人名删除线 */
+#day-list.past .tag-person { text-decoration: line-through; color: #94A3B8; }
 
 /* ---------- 表单控件 ---------- */
 input[type="text"], input[type="number"], textarea, select {
@@ -258,6 +260,10 @@ select { cursor: pointer; }
 .cal-cell.cal-hol:hover { background: #FFEEEE; border-color: rgba(220, 38, 38, .3); }
 /* 人员筛选命中的格子 */
 .cal-cell.cell-hl { border-color: rgba(59, 130, 246, .55); background: #F0F6FF; box-shadow: inset 0 0 0 1px rgba(147, 197, 253, .7); }
+/* 今日日期格子：淡绿描边 */
+.cal-cell.today { outline: 2px solid #5BC98C; outline-offset: -2px; }
+/* 已过日期待办人名：删除线 + 灰化 */
+.cal-cell.past .cal-todo-line { text-decoration: line-through; color: #94A3B8; }
 /* 格内待办：负责人以醒目芯片逐行展示，超出滚动 */
 /* 人员芯片：横向流式排列 */
 .cal-todo-line {

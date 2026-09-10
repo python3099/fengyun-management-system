@@ -670,6 +670,7 @@ function renderCalendar() {
     if (d.getMonth() !== calM) cell.classList.add('other-month');
     if (isRest) cell.classList.add('cal-hol');
     if (key === todayStr) cell.classList.add('today');
+    if (key < todayStr) cell.classList.add('past');
     cell.title = hol ? hol.name + (isRest ? '（放假）' : '（调休上班）') : '';
 
     const redDay = (isWeekend || isRest) ? ' day-red' : '';
@@ -743,7 +744,10 @@ function openDayModal(dateKey) {
 
 function renderDayList() {
   const list = todos[selectedDate] || [];
-  $('#day-list').innerHTML = list.length
+  const isPast = selectedDate < fmtDate(new Date());
+  const el = $('#day-list');
+  el.classList.toggle('past', isPast);
+  el.innerHTML = list.length
     ? list.map(t => t.id === editTodoId ? dayEditItemHTML(t) : dayItemHTML(t)).join('')
     : '<div class="empty-state" style="padding:22px 0">该日暂无待办，在上方填写后点击「添加待办」</div>';
 }
